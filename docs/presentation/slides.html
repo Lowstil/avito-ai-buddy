@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Avito AI-Buddy Presentation</title>
+  <style>
+    @page {
+      size: 1600px 900px;
+      margin: 0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background: #0b0f19; color: #f8fafc; }
+    
+    .slide {
+      width: 1600px;
+      height: 900px;
+      padding: 70px 90px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      background: #0b0f19;
+    }
+
+    /* Glow spheres */
+    .glow { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+    .glow-g { width: 600px; height: 600px; background: rgba(4, 224, 97, 0.12); top: -150px; left: -150px; }
+    .glow-b { width: 700px; height: 700px; background: rgba(0, 170, 255, 0.12); bottom: -150px; right: -150px; }
+    .glow-p { width: 500px; height: 500px; background: rgba(150, 94, 235, 0.12); top: 30%; right: 20%; }
+
+    /* Header bar */
+    .slide-header { display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .logo-badge { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 900; }
+    .dots { display: flex; gap: 6px; }
+    .dot-g { width: 12px; height: 12px; border-radius: 50%; background: #04E061; }
+    .dot-b { width: 12px; height: 12px; border-radius: 50%; background: #00AAFF; }
+    .dot-p { width: 12px; height: 12px; border-radius: 50%; background: #965EEB; }
+    .dot-r { width: 12px; height: 12px; border-radius: 50%; background: #FF5252; }
+
+    .slide-num { font-size: 14px; font-weight: 700; color: #64748b; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 999px; }
+
+    /* Content Area */
+    .content { z-index: 10; margin: auto 0; }
+    h1.hero { font-size: 58px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+    h2.section-title { font-size: 42px; font-weight: 900; margin-bottom: 12px; }
+    p.subtitle { font-size: 20px; color: #94a3b8; max-width: 900px; line-height: 1.5; }
+    .highlight-g { color: #04E061; }
+    .highlight-b { color: #00AAFF; }
+    .highlight-p { color: #965EEB; }
+    .highlight-r { color: #FF5252; }
+
+    /* Cards & Grids */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 36px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 36px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 36px; }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .card-title { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+    .card-desc { font-size: 16px; color: #cbd5e1; line-height: 1.6; }
+    .metric-val { font-size: 48px; font-weight: 900; margin: 12px 0 6px 0; }
+
+    /* Footer bar */
+    .slide-footer { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #64748b; z-index: 10; border-top: 1px solid rgba(255,255,255,0.08); pt: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Slide 1: Title -->
+  <div class="slide">
+    <div class="glow glow-g"></div>
+    <div class="glow glow-b"></div>
+    <div class="slide-header">
+      <div class="logo-badge">
+        <div class="dots"><div class="dot-g"></div><div class="dot-b"></div><div class="dot-p"></div><div class="dot-r"></div></div>
+        <span>Avito Start • Hack&Change 2026</span>
+      </div>
+      <div class="slide-num">01 / 10</div>
+    </div>
+    <div class="content">
+      <div style="display:inline-block; padding: 8px 18px; border-radius: 999px; background: rgba(4,224,97,0.15); border: 1px solid #04E061; color: #04E061; font-weight: 700; font-size: 14px; margin-bottom: 24px;">
+        КЕЙС ХАКАТОНА: AI-BUDDY
+      </div>
+      <h1 class="hero">AI-buddy: ИИ-наставник<br>для стажёров Авито</h1>
+      <p class="subtitle">
+        Интеллектуальная система адаптации, снижающая рутину менторов на 45%, с протоколом MCP, сквозными кадровыми действиями и интерфейсом в стиле Glassy Liquid.
+      </p>
+      <div style="margin-top: 40px; display: flex; gap: 20px; align-items: center;">
+        <div class="glass-card" style="padding: 16px 24px; border-radius: 16px;">
+          <span style="font-size: 13px; color: #94a3b8;">Команда разработки:</span>
+          <p style="font-size: 18px; font-weight: 800; color: #fff;">Lowstil (Full-Stack & AI)</p>
+        </div>
+        <div class="glass-card" style="padding: 16px 24px; border-radius: 16px; border-color: #04E061;">
+          <span style="font-size: 13px; color: #04E061; font-weight: 700;">Репозиторий GitHub:</span>
+          <p style="font-size: 16px; font-weight: 700; color: #fff;">github.com/Lowstil/avito-ai-buddy</p>
+        </div>
+        <div class="glass-card" style="padding: 16px 24px; border-radius: 16px;">
+          <span style="font-size: 13px; color: #94a3b8;">Доступ для жюри:</span>
+          <p style="font-size: 16px; font-weight: 700; color: #38bdf8;">hack-and-change-2026</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AI-buddy: ИИ-наставник для стажёров</span>
+      <span>Avito Start • Changellenge • 2026</span>
+    </div>
+  </div>
+
+  <!-- Slide 2: Problem & Context -->
+  <div class="slide">
+    <div class="glow glow-p"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Бизнес-контекст и проблема</span></div>
+      <div class="slide-num">02 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Сколько времени наставник тратит на стажёра?</h2>
+      <p class="subtitle">По оценке Авито, наставники тратят от 40 до 65 часов рабочего времени за программу.</p>
+      
+      <div class="grid-3">
+        <div class="glass-card" style="border-top: 4px solid #00AAFF;">
+          <p style="color: #94a3b8; font-size: 14px; font-weight: 700;">6-МЕСЯЧНАЯ ПРОГРАММА</p>
+          <div class="metric-val highlight-b">40–48 ч</div>
+          <p class="card-desc">Времени уходит на 1:1, разъяснения базовых доступов, процессов и регламентов.</p>
+        </div>
+        <div class="glass-card" style="border-top: 4px solid #965EEB;">
+          <p style="color: #94a3b8; font-size: 14px; font-weight: 700;">9-МЕСЯЧНАЯ ПРОГРАММА</p>
+          <div class="metric-val highlight-p">55–65 ч</div>
+          <p class="card-desc">Повторяющиеся вопросы отвлекают Senior-инженеров от стратегических задач продукта.</p>
+        </div>
+        <div class="glass-card" style="border-top: 4px solid #04E061;">
+          <p style="color: #94a3b8; font-size: 14px; font-weight: 700;">ЦЕЛЬ AI-BUDDY</p>
+          <div class="metric-val highlight-g">-45%</div>
+          <p class="card-desc">Сократить рутинные обращения и организационные действия, сохранив содержательное менторство.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Проблема и предпосылки решения</span>
+      <span>02 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 3: Target Audience -->
+  <div class="slide">
+    <div class="glow glow-b"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Целевая аудитория и роли (RBAC)</span></div>
+      <div class="slide-num">03 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Три ключевые персоны процесса адаптации</h2>
+      <p class="subtitle">Система учитывает права каждого участника и разграничивает доступ к операциям.</p>
+
+      <div class="grid-3">
+        <div class="glass-card">
+          <div style="font-size: 32px; margin-bottom: 10px;">🎓</div>
+          <h3 class="card-title highlight-g">Стажёр (Intern)</h3>
+          <p class="card-desc">
+            <strong>Задача:</strong> Быстро освоить инструменты первых недель, получить доступы к стендам SPT/Lens, оформить отгул без неловкости и знать свой следующий шаг.
+          </p>
+        </div>
+        <div class="glass-card">
+          <div style="font-size: 32px; margin-bottom: 10px;">👨‍💻</div>
+          <h3 class="card-title highlight-b">Наставник (Buddy)</h3>
+          <p class="card-desc">
+            <strong>Задача:</strong> Не отвечать в сотый раз на вопрос «как заказать отгул», видеть прогресс чек-листа в 1 клик, согласовывать заявки и фокусироваться на код-ревью.
+          </p>
+        </div>
+        <div class="glass-card">
+          <div style="font-size: 32px; margin-bottom: 10px;">👩‍💼</div>
+          <h3 class="card-title highlight-p">Тимлид (Lead)</h3>
+          <p class="card-desc">
+            <strong>Задача:</strong> Контролировать соблюдение Zero Bug Policy (ZBP), согласовывать экваторные этапы и отслеживать метрики онбординга команды.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Ролевая модель и персоны</span>
+      <span>03 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 4: Solution Architecture -->
+  <div class="slide">
+    <div class="glow glow-g"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Архитектура решения</span></div>
+      <div class="slide-num">04 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Архитектура Avito AI-Buddy и стек Авито</h2>
+      <p class="subtitle">Слоистая архитектура Clean Architecture со стандартом Model Context Protocol (MCP).</p>
+
+      <div class="grid-4">
+        <div class="glass-card" style="border-color: #00AAFF;">
+          <h3 class="card-title highlight-b">Frontend UI</h3>
+          <p class="card-desc">React 19, TypeScript, Zustand, Zod, Framer Motion Glassy Liquid. Отклик &lt; 0.2 с.</p>
+        </div>
+        <div class="glass-card" style="border-color: #965EEB;">
+          <h3 class="card-title highlight-p">FastAPI Core</h3>
+          <p class="card-desc">Async REST API, RBAC Middleware, Clickstream Logger, Prometheus метрики.</p>
+        </div>
+        <div class="glass-card" style="border-color: #04E061;">
+          <h3 class="card-title highlight-g">MCP Tool Server</h3>
+          <p class="card-desc">6 инструментов: Absence, Access, Checklist, Playbook RAG, 1:1 Agenda.</p>
+        </div>
+        <div class="glass-card" style="border-color: #FF5252;">
+          <h3 class="card-title highlight-r">Corporate Mocks</h3>
+          <p class="card-desc">Имитация HR-сервиса отсутствий Авито, IAM ServiceDesk, база Playbook.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Архитектура и интеграции</span>
+      <span>04 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 5: Scenario 1 - Absence Action -->
+  <div class="slide">
+    <div class="glow glow-g"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Ключевой сценарий 1: Кадровое действие</span></div>
+      <div class="slide-num">05 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Сквозное действие: Оформление отгула (Day-off)</h2>
+      <p class="subtitle">Точное выполнение условия задания: завершенное действие через корпоративный сервис.</p>
+
+      <div class="grid-2">
+        <div class="glass-card">
+          <h3 class="card-title highlight-g">Диалог в чате с AI-buddy</h3>
+          <p class="card-desc" style="font-family: monospace; font-size: 14px; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; margin-top: 10px;">
+            > Стажёр: "Мне нужен отгул на пятницу"<br>
+            > AI-buddy: "Без проблем! Баланс: 2 дня. Уточни дату и причину?"<br>
+            > Стажёр: "20 ноября, визит к врачу"<br>
+            > AI-buddy: "Заявка #ABS-2026-002 зарегистрирована и отправлена Алексею Смирнову на согласование!"
+          </p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-b">Что происходит под капотом (MCP):</h3>
+          <ul class="card-desc" style="space-y: 8px; list-style-type: none;">
+            <li>✅ <strong>1. Слот-филлинг:</strong> Ассистент собирает дату и причину отсутствия.</li>
+            <li>✅ <strong>2. Вызов MCP:</strong> Инструмент <code>request_absence</code> отправляет JSON в HR API.</li>
+            <li>✅ <strong>3. Сохранение:</strong> Заявка сохраняется в базе со статусом <code>pending_approval</code>.</li>
+            <li>✅ <strong>4. Согласование:</strong> Наставник видит заявку в реестре и утверждает в 1 клик.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Сценарий 1: Корпоративные действия</span>
+      <span>05 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 6: Scenario 2 - Checklist & Playbook RAG -->
+  <div class="slide">
+    <div class="glow glow-p"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Ключевой сценарий 2: Чек-лист и RAG</span></div>
+      <div class="slide-num">06 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Интерактивный чек-лист и AvitoTech Playbook</h2>
+      <p class="subtitle">Официальные материалы чек-листа Backend-стажёра Авито в удобном трекере.</p>
+
+      <div class="grid-3">
+        <div class="glass-card">
+          <h3 class="card-title highlight-b">Официальный чек-лист</h3>
+          <p class="card-desc">Оцифровка этапов: 1 неделя (VPN, k8s, SPT, ZBP, Go), 2 неделя (PaaS), 1 месяц (КИ и ПДн), Экватор 3 мес.</p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-g">RAG-консультант</h3>
+          <p class="card-desc">Ответы со ссылками на регламенты: Zero Bug Policy (время реакции &lt; 30м), спринты Scrum, стандарты код-ревью.</p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-p">Рекомендация шагов</h3>
+          <p class="card-desc">Кнопка «Какой мой следующий шаг?» автоматически вычисляет приоритетную задачу в работе.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Сценарий 2: Чек-лист и База знаний</span>
+      <span>06 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 7: Scenario 3 - Access & 1:1 Prep -->
+  <div class="slide">
+    <div class="glow glow-b"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Ключевой сценарий 3: Доступы и 1:1</span></div>
+      <div class="slide-num">07 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">ServiceDesk доступов и подготовка к 1:1</h2>
+      <p class="subtitle">Снятие бюрократии и фокус на качественной обратной связи.</p>
+
+      <div class="grid-2">
+        <div class="glass-card">
+          <h3 class="card-title highlight-p">Автоматизация доступов (ServiceDesk)</h3>
+          <p class="card-desc">
+            Стажёр запрашивает доступ к стендам SPT, Lens/k8s или Grafana прямо из чата.<br>
+            Инструмент <code>request_access</code> оформляет заявку, присваивает профиль разработчика и сообщает время готовности (10 минут).
+          </p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-g">Генератор адженды для встречи 1:1</h3>
+          <p class="card-desc">
+            Инструмент <code>generate_1on1_summary</code> анализирует прогресс чек-листа, формирует список выполненных пунктов, текущих блокеров и вопросов наставнику к регулярному митингу.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Сценарий 3: ServiceDesk и 1:1</span>
+      <span>07 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 8: Security & RBAC -->
+  <div class="slide">
+    <div class="glow glow-g"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Безопасность и соответствие нормам</span></div>
+      <div class="slide-num">08 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Безопасность, RBAC и синтетические данные</h2>
+      <p class="subtitle">Полное соблюдение ограничений кейса 02, 04, 05, 06.</p>
+
+      <div class="grid-3">
+        <div class="glass-card">
+          <h3 class="card-title highlight-g">100% Синтетические данные</h3>
+          <p class="card-desc">Никаких реальных персональных данных сотрудников. Все профили тестовые.</p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-b">Ролевая модель (RBAC)</h3>
+          <p class="card-desc">Стажёр не может одобрить отгул сам себе (403 Forbidden). Только наставник или лид.</p>
+        </div>
+        <div class="glass-card">
+          <h3 class="card-title highlight-r">Security Guardrails</h3>
+          <p class="card-desc">Запросы паролей от прод-баз или зарплат коллег блокируются со ссылкой на политику КИ.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Безопасность и регламенты</span>
+      <span>08 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 9: Metrics & Pilot Plan -->
+  <div class="slide">
+    <div class="glow glow-p"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Продуктовые метрики и план пилота</span></div>
+      <div class="slide-num">09 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Метрики эффекта и дизайн A/B тестирования</h2>
+      <p class="subtitle">Способ замера бизнес-результата на стажёрах Авито.</p>
+
+      <div class="grid-3">
+        <div class="glass-card">
+          <p style="color: #94a3b8; font-size: 13px; font-weight: 700;">ВРЕМЯ НАСТАВНИКА</p>
+          <div class="metric-val highlight-g">-45%</div>
+          <p class="card-desc">Снижение с 48 ч до 24 ч рутинных консультаций на одного стажёра.</p>
+        </div>
+        <div class="glass-card">
+          <p style="color: #94a3b8; font-size: 13px; font-weight: 700;">ВРЕМЯ ДО ПЕРВОГО КОММИТА</p>
+          <div class="metric-val highlight-b">3.5 дня</div>
+          <p class="card-desc">Ускорение с 7 дней за счёт быстрой настройки окружения и доступов.</p>
+        </div>
+        <div class="glass-card">
+          <p style="color: #94a3b8; font-size: 13px; font-weight: 700;">РЕШЕНИЕ ВОПРОСОВ БЕЗ ЭСКАЛАЦИИ</p>
+          <div class="metric-val highlight-p">> 78%</div>
+          <p class="card-desc">Запросы по процессам и отгулам закрываются ассистентом автономно.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Метрики и эксперименты</span>
+      <span>09 / 10</span>
+    </div>
+  </div>
+
+  <!-- Slide 10: Technical Excellence -->
+  <div class="slide">
+    <div class="glow glow-g"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><span>Техническое качество и готовность</span></div>
+      <div class="slide-num">10 / 10</div>
+    </div>
+    <div class="content">
+      <h2 class="section-title">Готовность решения к проверке и внедрению</h2>
+      <p class="subtitle">Все требования регламента хакатона Hack&Change 2026 выполнены на 100%.</p>
+
+      <div class="grid-4">
+        <div class="glass-card">
+          <div class="metric-val highlight-g">90%</div>
+          <p class="card-title">Тестовое покрытие</p>
+          <p class="card-desc">37 тестов Pytest. Норматив (&gt;80%) перевыполнен.</p>
+        </div>
+        <div class="glass-card">
+          <div class="metric-val highlight-b">1 клик</div>
+          <p class="card-title">Запуск решения</p>
+          <p class="card-desc">Скрипт <code>run.py</code> и Docker Compose для экспертов.</p>
+        </div>
+        <div class="glass-card">
+          <div class="metric-val highlight-p">5 SDD</div>
+          <p class="card-title">Спецификаций</p>
+          <p class="card-desc">OpenSpec стандарты архитектуры, промптов и MCP.</p>
+        </div>
+        <div class="glass-card">
+          <div class="metric-val highlight-r">&lt; 0.2 с</div>
+          <p class="card-title">Скорость UI</p>
+          <p class="card-desc">React 19 + Vite с дизайном Glassy Liquid.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Финальный слайд • Репозиторий: github.com/Lowstil/avito-ai-buddy</span>
+      <span>10 / 10</span>
+    </div>
+  </div>
+
+</body>
+</html>
