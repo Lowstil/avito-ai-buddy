@@ -1,28 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatMessage } from '../types';
-import { Send, Bot, User, Sparkles, Shield, Calendar, ArrowRight, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Calendar, Shield, ArrowRight, Loader2 } from 'lucide-react';
 
 interface ChatWidgetProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onSendMessage: (text: string) => void;
-  onOpenAbsenceModal: () => void;
-  onOpenAccessModal: () => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
   messages,
   isLoading,
   onSendMessage,
-  onOpenAbsenceModal,
-  onOpenAccessModal
+  onNavigateToTab
 }) => {
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
+  // FIX: Scroll ONLY the internal chat container, NEVER jump or scroll the window/page!
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
@@ -44,7 +48,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   return (
     <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col h-[650px] relative">
       
-      {/* Chat Header */}
+      {/* Human-friendly Header */}
       <div className="flex items-center justify-between pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#04E061] to-[#00AAFF] flex items-center justify-center shadow-[0_0_20px_rgba(4,224,97,0.3)]">
@@ -52,28 +56,32 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           </div>
           <div>
             <h3 className="text-base font-black text-white flex items-center gap-1.5">
-              AI-Buddy • Наставник
+              AI-Наставник (Buddy)
               <span className="w-2 h-2 rounded-full bg-[#04E061] inline-block animate-pulse"></span>
             </h3>
-            <p className="text-xs text-slate-400">MCP Orchestrator • Стек Авито • Ответ &lt; 1 сек</p>
+            <p className="text-xs text-slate-400">Всегда на связи • Отвечает по регламентам Авито</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium bg-white/5 px-2.5 py-1 rounded-xl">
+        <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
           <Sparkles size={13} className="text-[#04E061]" />
-          <span>RAG Playbook Active</span>
+          <span>База знаний Playbook</span>
         </div>
       </div>
 
-      {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+      {/* Messages Scroll Area (CONTAINED: No window scrolling!) */}
+      <div 
+        ref={chatScrollRef}
+        className="flex-1 overflow-y-auto py-4 space-y-4 pr-2"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
               className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.sender === 'assistant' && (
@@ -89,52 +97,57 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                     : 'glass-card border-white/10 text-slate-200 shadow-md'
                 }`}
               >
-                {/* Message text with formatting */}
-                <div className="whitespace-pre-wrap space-y-1">
+                {/* Message body */}
+                <div className="whitespace-pre-wrap space-y-1.5 font-normal">
                   {msg.content}
                 </div>
 
-                {/* Interactive Action Card if MCP Tool executed */}
+                {/* Human-friendly Action Card: Day-off created */}
                 {msg.action_type === 'absence_created' && msg.action_payload && (
-                  <div className="mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200">
-                    <p className="font-bold text-xs flex items-center gap-1.5">
-                      <Calendar size={14} className="text-[#04E061]" />
-                      Действие выполнено: Заявка #{msg.action_payload.id}
+                  <div className="mt-3 p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-100">
+                    <p className="font-bold text-xs flex items-center gap-1.5 text-white">
+                      <Calendar size={15} className="text-[#04E061]" />
+                      Заявка #{msg.action_payload.id} успешно подана
                     </p>
                     <p className="text-[11px] text-slate-300 mt-1">
-                      Дата: {msg.action_payload.start_date} • Статус: {msg.action_payload.status}
+                      Дата: <strong>{msg.action_payload.start_date}</strong> • Причина: {msg.action_payload.reason}
                     </p>
-                    <button
-                      onClick={onOpenAbsenceModal}
-                      className="mt-2 text-[11px] font-bold text-[#04E061] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      Открыть реестр отсутствий <ArrowRight size={12} />
-                    </button>
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <button
+                        onClick={() => onNavigateToTab && onNavigateToTab('absences')}
+                        className="px-3 py-1.5 rounded-lg bg-[#04E061] text-slate-950 text-[11px] font-bold hover:bg-[#03c754] transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        Перейти в раздел отгулов <ArrowRight size={12} />
+                      </button>
+                    </div>
                   </div>
                 )}
 
+                {/* Human-friendly Action Card: Access Requested */}
                 {msg.action_type === 'access_requested' && msg.action_payload && (
-                  <div className="mt-3 p-3 rounded-xl bg-purple-950/40 border border-purple-500/40 text-purple-200">
-                    <p className="font-bold text-xs flex items-center gap-1.5">
-                      <Shield size={14} className="text-[#965EEB]" />
-                      Заявка в ServiceDesk: {msg.action_payload.system_name}
+                  <div className="mt-3 p-3.5 rounded-xl bg-purple-950/50 border border-purple-500/40 text-purple-100">
+                    <p className="font-bold text-xs flex items-center gap-1.5 text-white">
+                      <Shield size={15} className="text-[#965EEB]" />
+                      Запрос доступа: {msg.action_payload.system_name}
                     </p>
                     <p className="text-[11px] text-slate-300 mt-1">
-                      Статус: {msg.action_payload.status} • Автоматическая выдача
+                      Статус: <span className="text-amber-300 font-semibold">Ожидает авто-выдачи (10-15 мин)</span>
                     </p>
-                    <button
-                      onClick={onOpenAccessModal}
-                      className="mt-2 text-[11px] font-bold text-[#965EEB] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      Посмотреть все доступы <ArrowRight size={12} />
-                    </button>
+                    <div className="mt-2.5">
+                      <button
+                        onClick={() => onNavigateToTab && onNavigateToTab('access')}
+                        className="px-3 py-1.5 rounded-lg bg-[#965EEB] text-white text-[11px] font-bold hover:bg-[#8545e6] transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        Посмотреть мои доступы <ArrowRight size={12} />
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                {/* Sources Footnote */}
+                {/* Sources pill */}
                 {msg.sources && msg.sources.length > 0 && (
                   <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-slate-400 flex items-center gap-1">
-                    <span className="font-semibold text-slate-500">Источник:</span>
+                    <span className="font-semibold text-slate-500">Источник информации:</span>
                     <span>{msg.sources.join(', ')}</span>
                   </div>
                 )}
@@ -157,21 +170,20 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             className="flex items-center gap-2 text-xs text-slate-400 pl-11"
           >
             <Loader2 size={16} className="animate-spin text-[#04E061]" />
-            <span>AI-buddy обращается к MCP-сервисам Авито...</span>
+            <span>AI-buddy готовит понятный ответ...</span>
           </motion.div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Quick Chips */}
+      {/* Suggested Quick Question Chips */}
       {messages.length > 0 && messages[messages.length - 1].suggested_chips && (
         <div className="pt-2 pb-3 flex flex-wrap gap-1.5">
           {messages[messages.length - 1].suggested_chips?.map((chip, idx) => (
             <button
               key={idx}
+              type="button"
               onClick={() => handleChipClick(chip)}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-xl glass-pill text-slate-300 hover:text-white cursor-pointer"
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-xl glass-pill text-slate-300 hover:text-white hover:border-[#04E061]/40 transition-colors cursor-pointer"
             >
               {chip}
             </button>
@@ -179,7 +191,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Input Box */}
+      {/* Chat Input Bar */}
       <form onSubmit={handleSubmit} className="pt-2">
         <div className="glass-card rounded-2xl p-1.5 flex items-center gap-2 border border-white/15 focus-within:border-[#04E061]/60 transition-colors">
           <input

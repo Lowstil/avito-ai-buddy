@@ -14,7 +14,7 @@
 
 ## 📑 Навигация по сдаче хакатона
 
-1. 🎬 **Видеодемонстрация (путь от запроса до результата):** [`docs/video_demo_script.md`](docs/video_demo_script.md)
+1. 🎬 **Видеодемонстрация (MP4, путь от запроса до результата):** [`docs/demo.mp4`](docs/demo.mp4) (видеофайл высокого качества с полным сквозным сценарием).
 2. 📊 **Продуктовая презентация (PDF):** [`docs/presentation/presentation.pdf`](docs/presentation/presentation.pdf)
 3. 📜 **SDD-спецификации (OpenSpec / spec-kit):** каталог [`specs/`](specs/)
 4. 🧪 **Отчёт о покрытии тестами (90% при нормативе >80%):** [`backend/htmlcov/`](backend/htmlcov/)

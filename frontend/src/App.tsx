@@ -5,12 +5,13 @@ import { Header } from './components/Header';
 import { StatsCard } from './components/StatsCard';
 import { ChecklistView } from './components/ChecklistView';
 import { ChatWidget } from './components/ChatWidget';
-import { AbsenceModal } from './components/AbsenceModal';
-import { AccessModal } from './components/AccessModal';
+import { AbsenceView } from './components/AbsenceView';
+import { AccessView } from './components/AccessView';
 import { Footer } from './components/Footer';
-import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles } from 'lucide-react';
+import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>('chat');
   const [activeUserId, setActiveUserId] = useState<string>('intern_1');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -19,16 +20,16 @@ export const App: React.FC = () => {
   const [absences, setAbsences] = useState<AbsenceRequest[]>([]);
   const [accessList, setAccessList] = useState<AccessItem[]>([]);
 
-  // Modals state
-  const [isAbsenceModalOpen, setIsAbsenceModalOpen] = useState(false);
-  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
-
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       sender: 'assistant',
-      content: 'Привет! Я твой цифровой наставник AI-buddy в Авито 🚀\nПомогу освоиться в процессах, оформить отгул, получить доступы и закрывать этапы чек-листа.',
+      content: (
+        "Привет! Я твой цифровой наставник AI-buddy в Авито 🚀\n" +
+        "Я помогу освоиться в команде, объясню стандарты разработки, помогу оформить отгул без лишней бюрократии и подскажу следующие шаги по чек-листу.\n\n" +
+        "Чем помочь тебе прямо сейчас?"
+      ),
       timestamp: new Date().toISOString(),
       suggested_chips: [
         'Как оформить отгул?',
@@ -111,7 +112,7 @@ export const App: React.FC = () => {
       };
       setMessages((prev) => [...prev, assistantMsg]);
 
-      // If an action was performed, refresh data!
+      // If an action was performed, refresh state
       if (res.action_type === 'absence_created') {
         const updatedAbsences = await api.getAbsences(activeUserId);
         setAbsences(updatedAbsences);
@@ -125,7 +126,7 @@ export const App: React.FC = () => {
         {
           id: `msg_err_${Date.now()}`,
           sender: 'assistant',
-          content: `⚠️ Произошла ошибка при обращении к сервису: ${e.message || 'Сбой сети'}. Пожалуйста, попробуй еще раз.`,
+          content: `⚠️ Не удалось связаться с сервисом: ${e.message || 'Ошибка сети'}. Пожалуйста, попробуй ещё раз.`,
           timestamp: new Date().toISOString()
         }
       ]);
@@ -135,6 +136,7 @@ export const App: React.FC = () => {
   };
 
   const handleAskBuddyAboutTask = (taskTitle: string) => {
+    setActiveTab('chat');
     handleSendMessage(`Как мне выполнить задачу: "${taskTitle}"? Расскажи подробнее со ссылками на стандарты.`);
   };
 
@@ -143,7 +145,6 @@ export const App: React.FC = () => {
       await api.createAbsence(activeUserId, { start_date: startDate, reason, absence_type: 'day_off' });
       const updated = await api.getAbsences(activeUserId);
       setAbsences(updated);
-      setIsAbsenceModalOpen(false);
       handleSendMessage(`Я оформил заявку на отгул на ${startDate} через корпоративный сервис.`);
     } catch (e) {
       console.error('Failed to create absence:', e);
@@ -195,7 +196,7 @@ export const App: React.FC = () => {
       <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-white">
         <div className="flex items-center gap-3 glass-panel px-6 py-4 rounded-2xl">
           <div className="w-5 h-5 border-2 border-[#04E061] border-t-transparent rounded-full animate-spin" />
-          <span>Загрузка профиля Avito AI-Buddy...</span>
+          <span>Загрузка данных Avito AI-Buddy...</span>
         </div>
       </div>
     );
@@ -209,51 +210,48 @@ export const App: React.FC = () => {
       <div className="glow-sphere-2" />
       <div className="glow-sphere-3" />
 
-      {/* Top Navigation */}
+      {/* Top Header with Tabs & User Switcher */}
       <Header
         currentUser={currentUser}
         users={users}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onSwitchUser={handleSwitchUser}
-        onOpenAbsenceModal={() => setIsAbsenceModalOpen(true)}
-        onOpenAccessModal={() => setIsAccessModalOpen(true)}
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-6 py-8 w-full z-10 space-y-8 flex-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full z-10 space-y-6 flex-1">
         
-        {/* Hero Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-pill text-xs font-semibold text-[#04E061] mb-2">
-              <Sparkles size={13} />
-              <span>Твой персональный наставник в команде</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-              Добро пожаловать в Авито, <span className="text-gradient-avito">{currentUser.name.split(' ')[0]}</span>!
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Кластер: <span className="text-slate-200 font-semibold">{currentUser.team}</span> • Наставник: <span className="text-slate-200 font-semibold">{currentUser.mentor_name || 'Алексей Смирнов'}</span>
-            </p>
+        {/* User Role Banner with Quick Switch Action */}
+        <div className="glass-panel px-4 py-2.5 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#04E061]"></span>
+            <span className="text-slate-300">
+              Вы вошли как: <strong className="text-white">{currentUser.name}</strong> ({currentUser.role === 'intern' ? 'Стажёр Backend' : currentUser.role === 'mentor' ? 'Наставник (Buddy)' : 'Тимлид команды'})
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleSendMessage('Помоги подготовиться к встрече 1:1 с наставником')}
-              className="glass-pill px-4 py-2 rounded-xl text-xs font-bold text-white hover:border-[#00AAFF]/50 transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <Clock size={14} className="text-[#00AAFF]" />
-              Подготовка к 1:1
-            </button>
-            <button
-              onClick={() => setIsAbsenceModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-[#04E061] text-slate-950 text-xs font-extrabold hover:bg-[#03c754] transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg shadow-[#04E061]/20"
-            >
-              Заказать отгул
-            </button>
+            <span className="text-slate-400">Быстрая смена роли:</span>
+            {currentUser.role === 'intern' ? (
+              <button
+                onClick={() => handleSwitchUser('mentor_1')}
+                className="px-2.5 py-1 rounded-xl bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-500/30 transition-colors cursor-pointer border border-blue-500/30"
+              >
+                Войти как Наставник (Алексей)
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSwitchUser('intern_1')}
+                className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold hover:bg-emerald-500/30 transition-colors cursor-pointer border border-emerald-500/30"
+              >
+                Войти как Стажёр (Арсений)
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 4 Glassy Motion Stats Cards (Directly inspired by user's screenshot!) */}
+        {/* 4 Glassy Motion Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Экономия времени ментора"
@@ -274,7 +272,7 @@ export const App: React.FC = () => {
             accentColor="#00AAFF"
           />
           <StatsCard
-            title="MCP Tool Запросов"
+            title="Кадровые действия (MCP)"
             value="109"
             change={78}
             changeLabel="без эскалации"
@@ -286,61 +284,135 @@ export const App: React.FC = () => {
             title="Скорость отклика UI"
             value="< 0.2 с"
             change={100}
-            changeLabel="SLA соблюдён"
+            changeLabel="мгновенно"
             icon={ShieldAlert}
             gradient="from-rose-500/20 to-amber-500/5"
             accentColor="#FF5252"
           />
         </div>
 
-        {/* Two-Column Grid: Left = Checklist Tracker, Right = AI Buddy Chat */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Interactive Onboarding Checklist (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            <ChecklistView
-              tasks={tasks}
-              summary={summary}
-              onToggleTask={handleToggleTask}
-              onAskBuddyAboutTask={handleAskBuddyAboutTask}
-            />
-          </div>
+        {/* TAB 1: AI-Buddy Chat with Side Quick Actions */}
+        {activeTab === 'chat' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* Left Quick Helpers (4 cols) */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-[#04E061]" />
+                  Быстрые действия
+                </h4>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleSendMessage('Мне нужен отгул на пятницу, помоги оформить')}
+                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                  >
+                    <span>🏖️ Оформить отгул (Day-off)</span>
+                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
+                  </button>
 
-          {/* Right Column: AI-Buddy Chat Assistant (5 cols) */}
-          <div className="lg:col-span-5 sticky top-24">
-            <ChatWidget
-              messages={messages}
-              isLoading={isChatLoading}
-              onSendMessage={handleSendMessage}
-              onOpenAbsenceModal={() => setIsAbsenceModalOpen(true)}
-              onOpenAccessModal={() => setIsAccessModalOpen(true)}
-            />
-          </div>
+                  <button
+                    onClick={() => handleSendMessage('Какой мой следующий шаг по чек-листу стажёра?')}
+                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                  >
+                    <span>🎯 Узнать следующий шаг</span>
+                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
+                  </button>
 
-        </div>
+                  <button
+                    onClick={() => handleSendMessage('Что такое Zero Bug Policy в Авито простыми словами?')}
+                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                  >
+                    <span>🛡️ Правило Zero Bug Policy</span>
+                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
+                  </button>
+
+                  <button
+                    onClick={() => handleSendMessage('Помоги подготовиться к встрече 1:1 с наставником')}
+                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                  >
+                    <span>🤝 Подготовка к встрече 1:1</span>
+                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Summary Box */}
+              {summary && (
+                <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">Твой прогресс</span>
+                    <span className="text-xs font-black text-[#04E061]">{summary.progress_percentage}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#04E061] to-[#00AAFF] rounded-full"
+                      style={{ width: `${summary.progress_percentage}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Закрыто <strong>{summary.completed_tasks}</strong> из {summary.total_tasks} задач чек-листа.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('checklist')}
+                    className="text-xs text-[#00AAFF] font-bold hover:underline flex items-center gap-1 pt-1 cursor-pointer"
+                  >
+                    Открыть весь чек-лист <ArrowRight size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Right Chat Center (8 cols) */}
+            <div className="lg:col-span-8">
+              <ChatWidget
+                messages={messages}
+                isLoading={isChatLoading}
+                onSendMessage={handleSendMessage}
+                onNavigateToTab={setActiveTab}
+              />
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 2: Onboarding Checklist */}
+        {activeTab === 'checklist' && (
+          <ChecklistView
+            tasks={tasks}
+            summary={summary}
+            onToggleTask={handleToggleTask}
+            onAskBuddyAboutTask={handleAskBuddyAboutTask}
+          />
+        )}
+
+        {/* TAB 3: Absences & Day-Offs */}
+        {activeTab === 'absences' && (
+          <AbsenceView
+            absences={absences}
+            currentUser={currentUser}
+            onCreateAbsence={handleCreateAbsence}
+            onApproveAbsence={handleApproveAbsence}
+            onRejectAbsence={handleRejectAbsence}
+            onAskBuddy={(q) => { setActiveTab('chat'); handleSendMessage(q); }}
+          />
+        )}
+
+        {/* TAB 4: Access & Software */}
+        {activeTab === 'access' && (
+          <AccessView
+            accessList={accessList}
+            currentUser={currentUser}
+            onRequestAccess={handleRequestAccess}
+            onGrantAccess={handleGrantAccess}
+            onAskBuddy={(q) => { setActiveTab('chat'); handleSendMessage(q); }}
+          />
+        )}
 
       </main>
 
-      {/* Corporate Action Modals */}
-      <AbsenceModal
-        isOpen={isAbsenceModalOpen}
-        onClose={() => setIsAbsenceModalOpen(false)}
-        absences={absences}
-        currentUser={currentUser}
-        onCreateAbsence={handleCreateAbsence}
-        onApproveAbsence={handleApproveAbsence}
-        onRejectAbsence={handleRejectAbsence}
-      />
-
-      <AccessModal
-        isOpen={isAccessModalOpen}
-        onClose={() => setIsAccessModalOpen(false)}
-        accessList={accessList}
-        onRequestAccess={handleRequestAccess}
-        onGrantAccess={handleGrantAccess}
-      />
-
-      {/* Glassy Liquid Footer (User screenshot wish!) */}
+      {/* Glassy Liquid Footer */}
       <Footer />
 
     </div>
