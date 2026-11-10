@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.rbac import get_current_user, UserRole
 from app.models.schemas import AbsenceRequest, AbsenceRequestCreate, AbsenceRejectPayload, UserProfile
