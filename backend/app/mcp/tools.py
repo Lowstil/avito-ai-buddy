@@ -88,15 +88,38 @@ class MCPToolRegistry:
     def tool_generate_1on1_summary(self, user_id: str) -> dict[str, Any]:
         summary = checklist_service.get_summary(user_id)
         tasks = checklist_service.get_tasks(user_id)
-        completed = [t.title for t in tasks if t.status == "completed"]
-        in_progress = [t.title for t in tasks if t.status == "in_progress"]
         
+        completed_tasks = [t for t in tasks if t.status == "completed"]
+        in_progress_tasks = [t for t in tasks if t.status == "in_progress"]
+        todo_tasks = [t for t in tasks if t.status == "todo" and t.priority == "high"]
+        
+        # Deep task-by-task synthesis
+        completed_points = [f"• **{t.title}**: успешно освоено (период: {t.period_title})" for t in completed_tasks[:4]]
+        
+        progress_analysis = []
+        for t in in_progress_tasks[:3]:
+            if "Zero Bug" in t.title:
+                progress_analysis.append(f"• **{t.title}**: в процессе изучения. *Вопрос ментору:* как классифицируются дефекты в нашем сервисе и где смотреть алерты в Grafana?")
+            elif "SPT" in t.title or "стенд" in t.title.lower():
+                progress_analysis.append(f"• **{t.title}**: настройка тестовых контуров. *Вопрос ментору:* как развернуть feature-ветку на стенде SPT для сквозного тестирования?")
+            elif "Lens" in t.title or "k8s" in t.title.lower():
+                progress_analysis.append(f"• **{t.title}**: мониторинг подов. *Вопрос ментору:* как получить доступ к логам стейджа в Lens?")
+            else:
+                progress_analysis.append(f"• **{t.title}**: в активной работе. *Пункт обсуждения:* критерии завершения и блокеры.")
+                
+        next_steps = [f"• **{t.title}** ({t.period_title})" for t in todo_tasks[:2]]
+
         agenda = [
-            f"1. Прогресс адаптации: закрыто {summary.completed_tasks} из {summary.total_tasks} задач ({summary.progress_percentage}%).",
-            f"2. Выполненные пункты: {', '.join(completed[:3]) if completed else 'Начало пути'}.",
-            f"3. Текущие задачи в работе: {', '.join(in_progress) if in_progress else 'Выбор следующих задач'}.",
-            "4. Вопросы по архитектуре сервисов и ревью кода.",
-            "5. Обратная связь и корректировка плана на следующий спринт."
+            f"📊 **Анализ прогресса онбординга:** закрыто {summary.completed_tasks} из {summary.total_tasks} задач ({summary.progress_percentage}% выполнения).",
+            "\n✅ **Что уже сделано и закрыто:**",
+            *(completed_points if completed_points else ["• Базовое знакомство с процессами"]),
+            "\n⏳ **Текущие задачи в работе и вопросы для обсуждения с наставником:**",
+            *(progress_analysis if progress_analysis else ["• Выбор приоритетных задач спринта"]),
+            "\n🎯 **Ближайшие цели на следующий спринт:**",
+            *(next_steps if next_steps else ["• Переход к самостоятельным бизнес-задачам"]),
+            "\n💡 **Темы для обратной связи (Feedback 360):**",
+            "• Насколько темп адаптации комфортен?",
+            "• Каковы ожидания по первому продуктовому коммиту и ревью в GitLab?"
         ]
         return {
             "status": "success",

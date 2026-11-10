@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.rbac import get_current_user, UserRole
-from app.models.schemas import AbsenceRequest, AbsenceRequestCreate, UserProfile
+from app.models.schemas import AbsenceRequest, AbsenceRequestCreate, AbsenceRejectPayload, UserProfile
 from app.services.absence_service import absence_service
 
 router = APIRouter(prefix="/api/absences", tags=["Corporate Absence Service"])
@@ -41,6 +41,7 @@ def approve_absence(
 @router.post("/{absence_id}/reject", response_model=AbsenceRequest)
 def reject_absence(
     absence_id: str,
+    payload: Optional[AbsenceRejectPayload] = None,
     user: UserProfile = Depends(get_current_user)
 ):
     if user.role not in [UserRole.MENTOR, UserRole.LEAD]:
@@ -48,7 +49,8 @@ def reject_absence(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Только наставник или руководитель может отклонять заявки на отсутствие."
         )
-    req = absence_service.update_status(absence_id, "rejected", approver_name=user.name)
+    reason_text = payload.reason if payload else "Отклонено наставником"
+    req = absence_service.update_status(absence_id, "rejected", approver_name=user.name, rejection_reason=reason_text)
     if not req:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
     return req

@@ -30,8 +30,9 @@ def test_chat_1on1_prep(client, intern_headers):
     res = client.post("/api/chat", json={"message": "Помоги подготовиться к встрече 1:1 с наставником"}, headers=intern_headers)
     assert res.status_code == 200
     data = res.json()
-    assert "План для встречи 1:1" in data["reply"]
-    assert "Прогресс адаптации" in data["reply"]
+    assert "1:1" in data["reply"]
+    assert "план" in data["reply"].lower()
+    assert "прогресс" in data["reply"].lower()
 
 def test_chat_checklist_intent(client, intern_headers):
     res = client.post("/api/chat", json={"message": "Какой мой следующий шаг по чек-листу?"}, headers=intern_headers)

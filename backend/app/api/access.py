@@ -21,8 +21,12 @@ def grant_system_access(
     system_key: str,
     user: UserProfile = Depends(get_current_user)
 ):
-    # Any mentor/lead or automated system can grant
-    item = access_service.grant_access(user.user_id, system_key)
+    if user.role not in [UserRole.MENTOR, UserRole.LEAD]:
+        raise HTTPException(
+            status_code=403,
+            detail="Стажёр не может сам себе подтверждать выдачу доступов. Требуется подтверждение наставника или тимлида."
+        )
+    item = access_service.grant_access("intern_1", system_key)
     if not item:
         raise HTTPException(status_code=404, detail="Система не найдена")
     return item

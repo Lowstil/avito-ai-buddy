@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatMessage } from '../types';
+import { MarkdownView } from './MarkdownView';
 import { Send, Bot, User, Sparkles, Calendar, Shield, ArrowRight, Loader2 } from 'lucide-react';
 
 interface ChatWidgetProps {
@@ -97,9 +98,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                     : 'glass-card border-white/10 text-slate-200 shadow-md'
                 }`}
               >
-                {/* Message body */}
-                <div className="whitespace-pre-wrap space-y-1.5 font-normal">
-                  {msg.content}
+                {/* Message body with rich Markdown formatting */}
+                <div className="space-y-1.5 font-normal">
+                  <MarkdownView content={msg.content} />
                 </div>
 
                 {/* Human-friendly Action Card: Day-off created */}

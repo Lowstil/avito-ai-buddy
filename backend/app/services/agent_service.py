@@ -154,22 +154,59 @@ class AgentService:
                 sources=["Чек-лист стажёра Авито (Backend трек)"]
             )
 
-        # 7. INTENT: 1:1 Meeting Preparation
+        # 6. INTENT: 1:1 Meeting Preparation (Deep task-by-task synthesis)
         if any(kw in lower_text for kw in ["1:1", "один на один", "встреча с наставником", "экватор", "подготов"]):
             res = mcp_tool_registry.execute("generate_1on1_summary", user_id=user.user_id)
             agenda = "\n".join(res.get("summary_points", []))
             return ChatResponse(
                 reply=(
-                    f"🤝 **План для встречи 1:1 с наставником ({user.mentor_name or 'Алексеем'}):**\n\n"
+                    f"🤝 **Персональный план для встречи 1:1 с твоим наставником ({user.mentor_name or 'Алексеем'}):**\n\n"
                     f"{agenda}\n\n"
-                    f"💡 *Совет:* На 1:1 не бойся открыто обсуждать блокеры и непонятные места в архитектуре сервисов."
+                    f"💬 *Рекомендация по встрече:* 1:1 — это твоё личное время с ментором. Открыто говори о блокерах и о том, где не хватает вводных. Наставник здесь, чтобы помочь расти, а не экзаменовать!"
                 ),
                 action_type="1on1_agenda_generated",
-                suggested_chips=["Как оформить отгул?", "Что такое Zero Bug Policy?", "Чек-лист задач"],
-                sources=["AvitoTech Playbook: 1:1 Guide"]
+                suggested_chips=["Как устроен Code Review?", "Как оформить отгул?", "Что такое Zero Bug Policy?"],
+                sources=["AvitoTech Playbook: 1:1 Engineering Culture", "Чек-лист стажёра Авито"]
             )
 
-        # 8. INTENT: Playbook FAQ Search (RAG)
+        # 7. INTENT: Code Review in Avito (Deep engineering standard)
+        if any(kw in lower_text for kw in ["code review", "код ревью", "код-ревью", "ревью кода", "мерж реквест", "pull request", "pr"]):
+            return ChatResponse(
+                reply=(
+                    "🔍 **Как устроен Code Review в инженерных командах Авито:**\n\n"
+                    "1. **Правило двух аппрувов (Two Approvals):**\n"
+                    "   • Для мержа PR в master требуется минимум 2 аппрува: один от твоего наставника (или Senior-инженера команды), второй от коллеги по кластеру.\n\n"
+                    "2. **Критерии готовности PR (Definition of Done):**\n"
+                    "   • **Тесты:** обязательное покрытие прикладной бизнес-логики юнит-тестами (> 80%).\n"
+                    "   • **Линтеры:** чистый прогон `golangci-lint` в CI без варнингов.\n"
+                    "   • **Описание:** ссылка на задачу в Jira, скриншот или curl-примеры проверки ручки, обоснование архитектурного выбора.\n\n"
+                    "3. **Регламент SLA на ревью:**\n"
+                    "   • В Авито принято смотреть PR коллег в течение **4 рабочих часов** (в крайнем случае до конца рабочего дня).\n\n"
+                    "4. **Культура общения на ревью:**\n"
+                    "   • Комментарии пишутся доброжелательно. Если с чем-то не согласен — созвонитесь на 5 минут в Zoom/Slack, чтобы не устраивать долгие треды в GitLab.\n\n"
+                    "💡 *Совет стажёру:* Первый PR сделай небольшим (до 150-200 строк), чтобы наставник быстрее дал первую обратную связь!"
+                ),
+                suggested_chips=["Подготовка к 1:1", "Что такое ZBP?", "Как оформить отгул?"],
+                sources=["AvitoTech Playbook: Engineering Guidelines", "Effective Go Standards"]
+            )
+
+        # 8. INTENT: PaaS, Deployment, Canary & Feature Flags
+        if any(kw in lower_text for kw in ["paas", "деплой", "deploy", "канарейк", "canary", "feature flag", "фича-флаг", "фича флаг"]):
+            return ChatResponse(
+                reply=(
+                    "🚀 **Деплой и PaaS в Авито: как безопасно доставлять код:**\n\n"
+                    "• **PaaS Авито:** внутренняя облачная платформа на базе Kubernetes, которая автоматически собирает контейнеры, настраивает ingress, проксирует метрики в Prometheus и логи в ELK.\n"
+                    "• **Канареечные релизы (Canary):** новая версия пода сначала получает 5% реального трафика. Система мониторит 5xx ошибки и задержку. Если всё чисто — трафик плавно повышается до 100%.\n"
+                    "• **Feature Flags:**\n"
+                    "  - *Runtime флаги:* переключаются на лету через веб-интерфейс без перезапуска подов.\n"
+                    "  - *Compile-time флаги:* для мажорных изменений архитектуры.\n"
+                    "• **Откат (Rollback):** если канарейка детектирует всплеск ошибок, PaaS автоматически откатывает трафик на стабильную версию за секунды."
+                ),
+                suggested_chips=["Стандарты Code Review", "Тестовые стенды SPT", "Мой чек-лист"],
+                sources=["Avito PaaS Documentation", "Avito Architecture Standards"]
+            )
+
+        # 9. INTENT: Playbook FAQ Search (RAG)
         rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
         if rag_res:
             top_article = rag_res[0]
@@ -183,7 +220,33 @@ class AgentService:
                 sources=[f"AvitoTech Playbook: {top_article['title']}"]
             )
 
-        # 9. GENERAL / WELCOME FALLBACK
+        # 10. GENERAL TECHNICAL / DOMAIN SMART FALLBACK
+        # If user asks about architecture, databases, kafka, tests, etc.
+        if any(kw in lower_text for kw in ["баз", "postgres", "redis", "бд", "sql"]):
+            return ChatResponse(
+                reply=(
+                    "🗄️ **Работа с базами данных в бэкенде Авито:**\n\n"
+                    "• **PostgreSQL:** основная реляционная СУБД для надежного хранения данных заказов и объявлений. Используется шардирование, пулеры соединений (PgBouncer) и строгие миграции (Goose).\n"
+                    "• **Redis:** высокоскоростной In-Memory кэш для сессий, лимитов RPS и частых горячих запросов.\n"
+                    "• **Правило:** никогда не делай `SELECT *` без лимитов и индексов, чтобы не нагружать реплики в часы пик!"
+                ),
+                suggested_chips=["Что такое ZBP?", "Стандарты Code Review", "Тестовые стенды SPT"],
+                sources=["Avito Data Platform Guidelines"]
+            )
+
+        if any(kw in lower_text for kw in ["kafka", "очеред", "сообщени", "событи", "broker"]):
+            return ChatResponse(
+                reply=(
+                    "📨 **Событийная архитектура и Apache Kafka в Авито:**\n\n"
+                    "• **Apache Kafka** — центральная шина асинхронного взаимодействия сотен микросервисов Авито.\n"
+                    "• **Паттерны:** At-least-once доставка, строгая идемпотентность консьюмеров (обработка дубликатов), Schema Registry (Protobuf/Avro).\n"
+                    "• Для локальной разработки схемы контрактов поднимаются в SPT-окружении через `avito-cli`."
+                ),
+                suggested_chips=["Деплой в PaaS", "Доступы SPT", "План 1:1"],
+                sources=["Avito Event-Driven Architecture"]
+            )
+
+        # 11. GENERAL / WELCOME FALLBACK
         return ChatResponse(
             reply=(
                 f"Привет, {user.name.split()[0]}! Я твой цифровой наставник **AI-buddy в Авито** 🚀\n\n"

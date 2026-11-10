@@ -49,8 +49,11 @@ export const api = {
   approveAbsence: (activeUserId: string, absenceId: string): Promise<AbsenceRequest> => 
     fetchWithAuth(`/api/absences/${absenceId}/approve`, activeUserId, { method: 'POST' }),
 
-  rejectAbsence: (activeUserId: string, absenceId: string): Promise<AbsenceRequest> => 
-    fetchWithAuth(`/api/absences/${absenceId}/reject`, activeUserId, { method: 'POST' }),
+  rejectAbsence: (activeUserId: string, absenceId: string, reason?: string): Promise<AbsenceRequest> => 
+    fetchWithAuth(`/api/absences/${absenceId}/reject`, activeUserId, {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason || 'Отклонено наставником' })
+    }),
 
   getAccessList: (activeUserId: string): Promise<AccessItem[]> => 
     fetchWithAuth('/api/access', activeUserId),

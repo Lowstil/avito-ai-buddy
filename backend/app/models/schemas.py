@@ -62,6 +62,10 @@ class AbsenceRequest(BaseModel):
     created_at: datetime
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+
+class AbsenceRejectPayload(BaseModel):
+    reason: str = Field(..., description="Причина отклонения заявки на отгул")
 
 # Access Request
 class AccessRequestCreate(BaseModel):

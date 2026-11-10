@@ -14,11 +14,32 @@
 
 ## 📑 Навигация по сдаче хакатона
 
-1. 🎬 **Видеодемонстрация (MP4, путь от запроса до результата):** [`docs/demo.mp4`](docs/demo.mp4) (видеофайл высокого качества с полным сквозным сценарием).
-2. 📊 **Продуктовая презентация (PDF):** [`docs/presentation/presentation.pdf`](docs/presentation/presentation.pdf)
-3. 📜 **SDD-спецификации (OpenSpec / spec-kit):** каталог [`specs/`](specs/)
-4. 🧪 **Отчёт о покрытии тестами (90% при нормативе >80%):** [`backend/htmlcov/`](backend/htmlcov/)
-5. 🔐 **Доступ для жюри:** для приватных репозиториев доступ предоставлен аккаунту `hack-and-change-2026`.
+1. 🎬 **Видеодемонстрация (MP4, путь от запроса до результата):** [`docs/demo.mp4`](docs/demo.mp4) — расширенное Full-HD видео (~63 секунды, 13 интерактивных сцен, демонстрирующее путь от вопроса до кадрового действия, фильтрацию отгулов с указанием причины отказа, строгий RBAC доступов, чек-лист с личными заметками и переключение между всеми 3 ролями).
+2. 📸 **Скриншоты ключевых экранов:** каталог [`docs/screenshots/`](docs/screenshots/) с доказательствами работы интерфейса.
+3. 📊 **Продуктовая презентация (PDF):** [`docs/presentation/presentation.pdf`](docs/presentation/presentation.pdf)
+4. 📜 **SDD-спецификации (OpenSpec / spec-kit):** каталог [`specs/`](specs/)
+5. 🧪 **Отчёт о покрытии тестами (90% при нормативе >80%):** [`backend/htmlcov/`](backend/htmlcov/)
+6. 🔐 **Доступ для жюри:** для приватных репозиториев доступ предоставлен аккаунту `hack-and-change-2026`.
+
+---
+
+## 📸 Галерея интерфейса (Glassy Liquid UI & Доказательства)
+
+| Главный дашборд и метрики стажёра | Ответы AI с Markdown и Code Review |
+|:---:|:---:|
+| ![Дашборд](docs/screenshots/01_dashboard_stats.png) | ![Чат Markdown](docs/screenshots/02_chat_markdown_codereview.png) |
+
+| Фильтры заявок и модальное окно деталей | Модальное окно указания причины отказа |
+|:---:|:---:|
+| ![Детали отгула](docs/screenshots/04_absence_detail_modal.png) | ![Причина отказа](docs/screenshots/05_rejection_reason_modal.png) |
+
+| Строгий RBAC: Стажёр (только запрос) | Строгий RBAC: Наставник (подтверждение) |
+|:---:|:---:|
+| ![RBAC Стажёр](docs/screenshots/06_access_intern_rbac.png) | ![RBAC Наставник](docs/screenshots/07_access_mentor_approval.png) |
+
+| Детальное окно задачи чек-листа с заметками | Перспектива тимлида команды (Екатерина) |
+|:---:|:---:|
+| ![Чек-лист заметки](docs/screenshots/08_checklist_task_notes_modal.png) | ![Тимлид](docs/screenshots/09_team_lead_perspective.png) |
 
 ---
 

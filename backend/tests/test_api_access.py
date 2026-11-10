@@ -18,7 +18,12 @@ def test_request_access(client, intern_headers):
     assert data["system_key"] == "spt_cluster"
     assert data["status"] == "requested"
 
-def test_grant_access(client, intern_headers):
-    res = client.post("/api/access/spt_cluster/grant", headers=intern_headers)
-    assert res.status_code == 200
-    assert res.json()["status"] == "active"
+def test_grant_access_rbac(client, intern_headers, mentor_headers):
+    # Intern cannot grant access to themselves -> 403 Forbidden
+    intern_res = client.post("/api/access/spt_cluster/grant", headers=intern_headers)
+    assert intern_res.status_code == 403
+
+    # Mentor can grant access -> 200 OK
+    mentor_res = client.post("/api/access/spt_cluster/grant", headers=mentor_headers)
+    assert mentor_res.status_code == 200
+    assert mentor_res.json()["status"] == "active"

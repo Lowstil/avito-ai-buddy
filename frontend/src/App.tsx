@@ -161,9 +161,9 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleRejectAbsence = async (id: string) => {
+  const handleRejectAbsence = async (id: string, reason?: string) => {
     try {
-      await api.rejectAbsence(activeUserId, id);
+      await api.rejectAbsence(activeUserId, id, reason);
       const updated = await api.getAbsences(activeUserId);
       setAbsences(updated);
     } catch (e) {
@@ -222,69 +222,81 @@ export const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full z-10 space-y-6 flex-1">
         
-        {/* User Role Banner with Quick Switch Action */}
-        <div className="glass-panel px-4 py-2.5 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#04E061]"></span>
+        {/* User Role Quick Switch Bar with ALL 3 Personas */}
+        <div className="glass-panel px-4 py-3 rounded-2xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#04E061] shadow-[0_0_8px_#04E061]"></span>
             <span className="text-slate-300">
-              Вы вошли как: <strong className="text-white">{currentUser.name}</strong> ({currentUser.role === 'intern' ? 'Стажёр Backend' : currentUser.role === 'mentor' ? 'Наставник (Buddy)' : 'Тимлид команды'})
+              Текущий пользователь: <strong className="text-white text-sm">{currentUser.name}</strong>{' '}
+              <span className="text-slate-400">
+                ({currentUser.role === 'intern' ? '🎓 Стажёр Backend' : currentUser.role === 'mentor' ? '👨‍💻 Наставник (Buddy)' : '👩‍💼 Тимлид команды'})
+              </span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Быстрая смена роли:</span>
-            {currentUser.role === 'intern' ? (
-              <button
-                onClick={() => handleSwitchUser('mentor_1')}
-                className="px-2.5 py-1 rounded-xl bg-blue-500/20 text-blue-300 font-bold hover:bg-blue-500/30 transition-colors cursor-pointer border border-blue-500/30"
-              >
-                Войти как Наставник (Алексей)
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSwitchUser('intern_1')}
-                className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold hover:bg-emerald-500/30 transition-colors cursor-pointer border border-emerald-500/30"
-              >
-                Войти как Стажёр (Арсений)
-              </button>
-            )}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-slate-400 font-medium mr-1">Быстрый вход:</span>
+            {users.map((u) => {
+              const isActive = u.user_id === currentUser.user_id;
+              return (
+                <button
+                  key={u.user_id}
+                  onClick={() => handleSwitchUser(u.user_id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all cursor-pointer border ${
+                    isActive
+                      ? 'bg-white/20 text-white font-bold border-white/40 shadow-lg ring-1 ring-[#04E061]'
+                      : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <img
+                    src={u.avatar_url}
+                    alt={u.name}
+                    className="w-5 h-5 rounded-full object-cover"
+                  />
+                  <span>{u.name.split(' ')[0]}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {u.role === 'intern' ? '(Стажёр)' : u.role === 'mentor' ? '(Наставник)' : '(Тимлид)'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* 4 Glassy Motion Stats Cards */}
+        {/* 4 Meaningful Intern Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            title="Экономия времени ментора"
-            value="24.5 ч"
-            change={45}
-            changeLabel="рутины снято"
+            title="Дней до экватора"
+            value="42 дня"
+            change={50}
+            changeLabel="половина пути (6 недель)"
             icon={Clock}
             gradient="from-emerald-500/20 to-teal-500/5"
             accentColor="#04E061"
           />
           <StatsCard
-            title="Прогресс чек-листа"
+            title="Прогресс онбординга"
             value={`${summary?.progress_percentage || 0}%`}
             change={summary?.completed_tasks || 0}
-            changeLabel={`из ${summary?.total_tasks || 0} задач`}
+            changeLabel={`из ${summary?.total_tasks || 0} задач чек-листа`}
             icon={CheckSquare}
             gradient="from-blue-500/20 to-cyan-500/5"
             accentColor="#00AAFF"
           />
           <StatsCard
-            title="Кадровые действия (MCP)"
-            value="109"
-            change={78}
-            changeLabel="без эскалации"
+            title="Баланс отгулов (Day-off)"
+            value="2 дня"
+            change={2}
+            changeLabel="доступно в ноябре"
             icon={Zap}
             gradient="from-purple-500/20 to-indigo-500/5"
             accentColor="#965EEB"
           />
           <StatsCard
-            title="Скорость отклика UI"
-            value="< 0.2 с"
-            change={100}
-            changeLabel="мгновенно"
+            title="Текущий спринт"
+            value="Спринт 24.1"
+            change={4}
+            changeLabel="активные задачи команды"
             icon={ShieldAlert}
             gradient="from-rose-500/20 to-amber-500/5"
             accentColor="#FF5252"

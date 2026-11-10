@@ -49,12 +49,14 @@ class AbsenceService:
         self._requests[new_id] = req
         return req
 
-    def update_status(self, absence_id: str, status: str, approver_name: str) -> Optional[AbsenceRequest]:
+    def update_status(self, absence_id: str, status: str, approver_name: str, rejection_reason: Optional[str] = None) -> Optional[AbsenceRequest]:
         req = self._requests.get(absence_id)
         if req:
             req.status = status
             req.approved_by = approver_name
             req.approved_at = datetime.now()
+            if status == "rejected" and rejection_reason:
+                req.rejection_reason = rejection_reason
             return req
         return None
 
