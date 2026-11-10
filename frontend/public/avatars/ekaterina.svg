@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg-ekaterina" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#581c87"/>
+    </linearGradient>
+    <linearGradient id="skin-ekaterina" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="blazer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#965EEB"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="url(#bg-ekaterina)"/>
+  <circle cx="64" cy="64" r="61" fill="none" stroke="#965EEB" stroke-width="2.5" opacity="0.6"/>
+  
+  <!-- Back Hair -->
+  <path d="M38 52 C34 76, 36 94, 44 104 C40 86, 44 68, 48 56 Z" fill="#18181b"/>
+  <path d="M90 52 C94 76, 92 94, 84 104 C88 86, 84 68, 80 56 Z" fill="#18181b"/>
+
+  <!-- Stylish Team Lead Blazer / Suit -->
+  <path d="M22 128 C22 94, 42 82, 64 82 C86 82, 106 94, 106 128 Z" fill="url(#blazer)"/>
+  <!-- Blouse V-neck -->
+  <path d="M54 84 L64 102 L74 84 Z" fill="#ffffff" opacity="0.95"/>
+  <path d="M52 82 L64 108 L48 128 L24 128 Z" fill="#6d28d9" opacity="0.4"/>
+  <path d="M76 82 L64 108 L80 128 L104 128 Z" fill="#5b21b6" opacity="0.4"/>
+
+  <!-- Neck -->
+  <path d="M55 70 L73 70 L71 86 L57 86 Z" fill="#fed7aa"/>
+  
+  <!-- Head -->
+  <ellipse cx="64" cy="52" rx="20" ry="24" fill="url(#skin-ekaterina)"/>
+  
+  <!-- Ears & Pearl Earrings -->
+  <circle cx="43" cy="54" r="3.8" fill="#fed7aa"/>
+  <circle cx="85" cy="54" r="3.8" fill="#fed7aa"/>
+  <circle cx="43" cy="58" r="2" fill="#ffffff"/>
+  <circle cx="85" cy="58" r="2" fill="#ffffff"/>
+
+  <!-- Hair (Sleek professional bob / brunette) -->
+  <path d="M43 46 C40 26, 52 20, 64 20 C76 20, 88 26, 85 46 C81 38, 72 34, 64 34 C56 34, 47 38, 43 46 Z" fill="#18181b"/>
+  <path d="M41 46 C41 62, 45 74, 48 76 C46 64, 44 54, 47 46 Z" fill="#27272a"/>
+  <path d="M87 46 C87 62, 83 74, 80 76 C82 64, 84 54, 81 46 Z" fill="#27272a"/>
+
+  <!-- Eyes (Intelligent, leadership look) -->
+  <circle cx="54" cy="50" r="2.6" fill="#0f172a"/>
+  <circle cx="74" cy="50" r="2.6" fill="#0f172a"/>
+  <circle cx="55" cy="49" r="0.9" fill="#ffffff"/>
+  <circle cx="75" cy="49" r="0.9" fill="#ffffff"/>
+  <!-- Lashes -->
+  <path d="M49 48 Q54 45 58 48" stroke="#18181b" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M70 48 Q74 45 79 48" stroke="#18181b" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <!-- Elegant Eyebrows -->
+  <path d="M48 43 Q54 40 59 42" stroke="#27272a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M69 42 Q74 40 80 43" stroke="#27272a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <!-- Nose -->
+  <path d="M64 50 L63 58 L66 58" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Gentle Smile with lipstick -->
+  <path d="M57 65 Q64 71 71 65" stroke="#be123c" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Team Lead Badge Pill -->
+  <g transform="translate(36, 108)">
+    <rect width="56" height="15" rx="7.5" fill="#965EEB" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.5))"/>
+    <text x="28" y="11" font-family="system-ui, sans-serif" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">TEAM LEAD</text>
+  </g>
+</svg>

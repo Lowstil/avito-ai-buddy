@@ -41,20 +41,29 @@ export const App: React.FC = () => {
   ]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
+  const normalizeUserAvatar = (user: UserProfile): UserProfile => ({
+    ...user,
+    avatar_url: (user.avatar_url && user.avatar_url.startsWith('/avatars/'))
+      ? user.avatar_url
+      : (user.role === 'intern' ? '/avatars/arseniy.svg' : user.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg')
+  });
+
   // Load Initial Data
   const loadData = async (userId: string) => {
     try {
+      // Access list is synchronized across intern and mentor for mentee intern_1
+      const accessTargetId = 'intern_1';
       const [allUsers, me, userTasks, userSummary, userAbsences, userAccess] = await Promise.all([
         api.getUsers(userId),
         api.getMe(userId),
         api.getChecklistTasks(userId),
         api.getChecklistSummary(userId),
         api.getAbsences(userId),
-        api.getAccessList(userId),
+        api.getAccessList(accessTargetId),
         api.getAnalyticsSummary(userId)
       ]);
-      setUsers(allUsers);
-      setCurrentUser(me);
+      setUsers(allUsers.map(normalizeUserAvatar));
+      setCurrentUser(normalizeUserAvatar(me));
       setTasks(userTasks);
       setSummary(userSummary);
       setAbsences(userAbsences);
@@ -173,21 +182,29 @@ export const App: React.FC = () => {
 
   const handleRequestAccess = async (systemKey: string, justification: string) => {
     try {
-      await api.requestAccess(activeUserId, systemKey, justification);
-      const updated = await api.getAccessList(activeUserId);
+      // Optimistic update for instant UI feedback
+      setAccessList(prev => prev.map(item => item.system_key === systemKey ? { ...item, status: 'requested' as const } : item));
+      await api.requestAccess('intern_1', systemKey, justification);
+      const updated = await api.getAccessList('intern_1');
       setAccessList(updated);
     } catch (e) {
       console.error('Failed to request access:', e);
+      const rollback = await api.getAccessList('intern_1');
+      setAccessList(rollback);
     }
   };
 
   const handleGrantAccess = async (systemKey: string) => {
     try {
+      // Optimistic update for mentor so status immediately turns active
+      setAccessList(prev => prev.map(item => item.system_key === systemKey ? { ...item, status: 'active' as const } : item));
       await api.grantAccess(activeUserId, systemKey);
-      const updated = await api.getAccessList(activeUserId);
+      const updated = await api.getAccessList('intern_1');
       setAccessList(updated);
     } catch (e) {
       console.error('Failed to grant access:', e);
+      const rollback = await api.getAccessList('intern_1');
+      setAccessList(rollback);
     }
   };
 
@@ -249,9 +266,12 @@ export const App: React.FC = () => {
                   }`}
                 >
                   <img
-                    src={u.avatar_url}
+                    src={u.avatar_url || (u.role === 'intern' ? '/avatars/arseniy.svg' : u.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg')}
                     alt={u.name}
-                    className="w-5 h-5 rounded-full object-cover"
+                    className="w-5 h-5 rounded-full object-cover bg-slate-800 ring-1 ring-white/10"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = u.role === 'intern' ? '/avatars/arseniy.svg' : u.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg';
+                    }}
                   />
                   <span>{u.name.split(' ')[0]}</span>
                   <span className="text-[10px] text-slate-400">

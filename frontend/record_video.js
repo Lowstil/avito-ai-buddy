@@ -47,11 +47,11 @@ async function run() {
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded', timeout: 20000 });
   await new Promise(r => setTimeout(r, 1500));
 
-  // SCENE 1: Overview of Dashboard & Meaningful Intern Stats (30 frames)
-  console.log('Scene 1: Intern Dashboard Overview & Stats...');
+  // SCENE 1: Overview of Dashboard, Vector Avatars & Meaningful Intern Stats (30 frames)
+  console.log('Scene 1: Intern Dashboard Overview & Stats with Local Avatars...');
   await capture(page, 30);
 
-  // SCENE 2: Chat with AI-Buddy - Zero Bug Policy & Clean Markdown (40 frames)
+  // SCENE 2: Chat with AI-Buddy - Zero Bug Policy & Clean Markdown (35 frames)
   console.log('Scene 2: Asking Zero Bug Policy (Testing Markdown Rendering)...');
   const zbpBtn = await page.$('button ::-p-text(Правило Zero Bug Policy)');
   if (zbpBtn) {
@@ -60,7 +60,7 @@ async function run() {
     await capture(page, 35);
   }
 
-  // SCENE 3: Deep Technical Question - Code Review Standards in Avito (50 frames)
+  // SCENE 3: Deep Technical Question - Code Review Standards in Avito (45 frames)
   console.log('Scene 3: Deep Technical Standards Question (Code Review)...');
   const inputSel = 'input[placeholder*="Спроси о процессах"]';
   await typeText(page, inputSel, 'Какие стандарты Code Review действуют в Авито?');
@@ -68,7 +68,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 2200));
   await capture(page, 45);
 
-  // SCENE 4: 1:1 Meeting Synthesis with Task Breakdown (50 frames)
+  // SCENE 4: 1:1 Meeting Synthesis with Task Breakdown (45 frames)
   console.log('Scene 4: 1:1 Meeting Agenda Synthesis with Mentor...');
   const meetingBtn = await page.$('button ::-p-text(Подготовка к встрече 1:1)');
   if (meetingBtn) {
@@ -90,8 +90,8 @@ async function run() {
   await new Promise(r => setTimeout(r, 2000));
   await capture(page, 40);
 
-  // SCENE 6: Switch to Absences Tab - Filter by status and view details (45 frames)
-  console.log('Scene 6: Absences Management & Status Filters...');
+  // SCENE 6: Switch to Absences Tab - Interactive Calendar Selection (55 frames)
+  console.log('Scene 6: Absences Interactive Calendar Selection...');
   const absenceTab = await page.$('button ::-p-text(Отгулы (Day-off))');
   if (absenceTab) {
     await absenceTab.click();
@@ -99,23 +99,50 @@ async function run() {
     await capture(page, 25);
   }
 
-  // Filter "На рассмотрении"
-  const pendingFilterBtn = await page.$('button ::-p-text(На рассмотрении)');
-  if (pendingFilterBtn) {
-    await pendingFilterBtn.click();
-    await new Promise(r => setTimeout(r, 800));
-    await capture(page, 20);
+  // Click "Оформить отгул в календаре"
+  const openCalendarBtn = await page.$('button ::-p-text(Оформить отгул в календаре)');
+  if (openCalendarBtn) {
+    await openCalendarBtn.click();
+    await new Promise(r => setTimeout(r, 1000));
+    await capture(page, 25);
+
+    // Pick a date on the calendar: day 27
+    const dayButtons = await page.$$('button:has(span.text-xs)');
+    for (const b of dayButtons) {
+      const text = await page.evaluate(el => el.textContent, b);
+      if (text && text.trim() === '27') {
+        await b.click();
+        await new Promise(r => setTimeout(r, 800));
+        await capture(page, 20);
+        break;
+      }
+    }
+
+    // Type reason
+    const reasonInput = await page.$('input[placeholder*="Сдача зачёта"]');
+    if (reasonInput) {
+      await reasonInput.type('Участие в конференции HighLoad++', { delay: 20 });
+      await capture(page, 15);
+    }
+
+    // Submit
+    const submitAbsence = await page.$('button ::-p-text(Отправить заявку)');
+    if (submitAbsence) {
+      await submitAbsence.click();
+      await new Promise(r => setTimeout(r, 1500));
+      await capture(page, 30);
+    }
   }
 
-  // Open Full Detail Modal for the first pending request
-  console.log('Scene 7: Open Request Detail Modal...');
-  const detailBtn = await page.$('button ::-p-text(Подробнее →)');
-  if (detailBtn) {
-    await detailBtn.click();
-    await new Promise(r => setTimeout(r, 1000));
-    await capture(page, 30);
+  // SCENE 7: Open Full Detail Modal with Calendar Highlighting
+  console.log('Scene 7: Open Detail Modal with Month Calendar Highlighting...');
+  const showInCalBtn = await page.$('button ::-p-text(Показать в календаре →)');
+  if (showInCalBtn) {
+    await showInCalBtn.click();
+    await new Promise(r => setTimeout(r, 1200));
+    await capture(page, 35);
     // Close modal
-    const closeDetail = await page.$('button ::-p-text(Закрыть)');
+    const closeDetail = await page.$('button ::-p-text(Закрыть окно)');
     if (closeDetail) await closeDetail.click();
     await new Promise(r => setTimeout(r, 600));
   }
@@ -129,7 +156,7 @@ async function run() {
     await capture(page, 20);
   }
 
-  // Click "Отклонить..." to trigger the rejection reason modal dialog
+  // Click "Отклонить..." on a request
   const rejectBtn = await page.$('button ::-p-text(Отклонить...)');
   if (rejectBtn) {
     await rejectBtn.click();
@@ -155,11 +182,6 @@ async function run() {
 
   // SCENE 9: Approve another request as Mentor
   console.log('Scene 9: Approve request as Mentor...');
-  const allFilterBtn = await page.$('button ::-p-text(Все)');
-  if (allFilterBtn) {
-    await allFilterBtn.click();
-    await new Promise(r => setTimeout(r, 600));
-  }
   const approveBtn = await page.$('button ::-p-text(Одобрить отгул)');
   if (approveBtn) {
     await approveBtn.click();
@@ -167,7 +189,7 @@ async function run() {
     await capture(page, 30);
   }
 
-  // SCENE 10: Switch to Intern (Арсений) - Demonstrate Strict RBAC in Accesses (50 frames)
+  // SCENE 10: Access Management & Strict RBAC Verification (Intern vs Mentor Sync)
   console.log('Scene 10: Access Management & Strict RBAC Verification...');
   const internBtn = await page.$('button ::-p-text(Арсений)');
   if (internBtn) {
@@ -182,7 +204,7 @@ async function run() {
     await capture(page, 30);
   }
 
-  // Intern requests access to a system (e.g. Lens k8s)
+  // Intern requests access to Lens k8s
   const reqAccessBtn = await page.$('button ::-p-text(Запросить доступ в 1 клик)');
   if (reqAccessBtn) {
     await reqAccessBtn.click();
@@ -190,28 +212,31 @@ async function run() {
     await capture(page, 30);
   }
 
-  // Switch to Mentor to show approval power
-  console.log('Scene 11: Mentor Approves Access...');
+  // Switch to Mentor to show instantaneous synchronization & approval power
+  console.log('Scene 11: Mentor Sees Request & Grants Access...');
   if (mentorBtn) {
     await mentorBtn.click();
     await new Promise(r => setTimeout(r, 1000));
-    await capture(page, 20);
+    await capture(page, 25);
   }
 
-  const grantBtn = await page.$('button ::-p-text(Подтвердить выдачу (Наставник))');
+  const grantBtn = await page.$('button ::-p-text(Подтвердить выдачу стажёру)');
   if (grantBtn) {
     await grantBtn.click();
     await new Promise(r => setTimeout(r, 1400));
     await capture(page, 30);
   }
 
-  // SCENE 12: Checklist Tab - Open Task Modal, Add Notes & Confetti (60 frames)
-  console.log('Scene 12: Checklist Tab, Detailed Task Modal, Notes & Confetti...');
+  // Switch back to Intern to show synchronized Active status
+  console.log('Scene 11b: Intern Sees Active Status...');
   if (internBtn) {
     await internBtn.click();
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1000));
+    await capture(page, 25);
   }
 
+  // SCENE 12: Checklist Tab - Open Task Modal, Add Notes & Confetti (50 frames)
+  console.log('Scene 12: Checklist Tab, Detailed Task Modal, Notes & Confetti...');
   const checklistTab = await page.$('button ::-p-text(Чек-лист стажёра)');
   if (checklistTab) {
     await checklistTab.click();
@@ -224,7 +249,7 @@ async function run() {
   if (taskCards.length > 0) {
     await taskCards[0].click();
     await new Promise(r => setTimeout(r, 1200));
-    await capture(page, 30);
+    await capture(page, 25);
 
     // Type personal note in the task modal textarea
     const noteArea = await page.$('textarea[placeholder*="Запишите сюда вопросы"]');
@@ -238,7 +263,7 @@ async function run() {
     if (modalCompleteBtn) {
       await modalCompleteBtn.click();
       await new Promise(r => setTimeout(r, 1500));
-      await capture(page, 40);
+      await capture(page, 35);
     }
   }
 
@@ -254,7 +279,7 @@ async function run() {
   // Scroll smoothly to footer
   await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 30);
+  await capture(page, 25);
 
   await browser.close();
   console.log(`Successfully captured ${frameIndex} high-resolution frames!`);

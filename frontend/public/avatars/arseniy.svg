@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg-arseniy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="100%" stop-color="#fbd38d"/>
+    </linearGradient>
+    <linearGradient id="hoodie" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#04E061"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="url(#bg-arseniy)"/>
+  <circle cx="64" cy="64" r="61" fill="none" stroke="#04E061" stroke-width="2.5" opacity="0.6"/>
+  
+  <!-- Hoodie / Clothes -->
+  <path d="M22 128 C22 96, 42 82, 64 82 C86 82, 106 96, 106 128 Z" fill="url(#hoodie)"/>
+  <!-- Hoodie collar & drawstring -->
+  <path d="M52 86 C52 98, 64 104, 64 104 C64 104, 76 98, 76 86 Z" fill="#0f172a" opacity="0.25"/>
+  <path d="M56 100 L56 114 M72 100 L72 114" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Neck -->
+  <path d="M54 74 L74 74 L72 88 L56 88 Z" fill="#fbd38d"/>
+  
+  <!-- Head -->
+  <ellipse cx="64" cy="56" rx="22" ry="26" fill="url(#skin)"/>
+  
+  <!-- Ears -->
+  <circle cx="41" cy="57" r="4.5" fill="#fbd38d"/>
+  <circle cx="87" cy="57" r="4.5" fill="#fbd38d"/>
+  
+  <!-- Modern Glasses (Tech Intern style) -->
+  <rect x="47" y="50" width="14" height="11" rx="3" fill="none" stroke="#04E061" stroke-width="2.2"/>
+  <rect x="67" y="50" width="14" height="11" rx="3" fill="none" stroke="#04E061" stroke-width="2.2"/>
+  <line x1="61" y1="55" x2="67" y2="55" stroke="#04E061" stroke-width="2.2"/>
+  <line x1="43" y1="54" x2="47" y2="54" stroke="#04E061" stroke-width="2"/>
+  <line x1="81" y1="54" x2="85" y2="54" stroke="#04E061" stroke-width="2"/>
+
+  <!-- Eyes -->
+  <circle cx="54" cy="55" r="2.5" fill="#0f172a"/>
+  <circle cx="74" cy="55" r="2.5" fill="#0f172a"/>
+  <circle cx="55" cy="54" r="0.8" fill="#ffffff"/>
+  <circle cx="75" cy="54" r="0.8" fill="#ffffff"/>
+
+  <!-- Eyebrows -->
+  <path d="M48 47 Q54 44 60 46" stroke="#451a03" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M68 46 Q74 44 80 47" stroke="#451a03" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Nose -->
+  <path d="M64 57 L63 64 L67 64" stroke="#d97706" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+
+  <!-- Friendly Smile -->
+  <path d="M57 69 Q64 76 71 69" stroke="#991b1b" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Hair (Trendy young dev cut) -->
+  <path d="M42 50 C40 30, 52 24, 64 24 C76 24, 88 30, 86 50 C82 46, 78 44, 64 44 C50 44, 46 46, 42 50 Z" fill="#292524"/>
+  <path d="M42 42 Q52 32 66 34 Q80 36 86 42 Q78 30 64 30 Q48 30 42 42 Z" fill="#44403c"/>
+
+  <!-- Intern Badge Pill -->
+  <g transform="translate(42, 108)">
+    <rect width="44" height="15" rx="7.5" fill="#04E061" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.5))"/>
+    <text x="22" y="11" font-family="system-ui, sans-serif" font-size="8.5" font-weight="900" fill="#052e16" text-anchor="middle" letter-spacing="0.5">INTERN</text>
+  </g>
+</svg>

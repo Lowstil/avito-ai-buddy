@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg-alexey" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c2340"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+    <linearGradient id="skin-alexey" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="100%" stop-color="#fbd38d"/>
+    </linearGradient>
+    <linearGradient id="sweater" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00AAFF"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="url(#bg-alexey)"/>
+  <circle cx="64" cy="64" r="61" fill="none" stroke="#00AAFF" stroke-width="2.5" opacity="0.6"/>
+  
+  <!-- Senior Dev Jacket / Shirt -->
+  <path d="M20 128 C20 94, 40 82, 64 82 C88 82, 108 94, 108 128 Z" fill="url(#sweater)"/>
+  <!-- T-shirt collar underneath -->
+  <path d="M52 84 C52 94, 64 100, 64 100 C64 100, 76 94, 76 84 Z" fill="#ffffff" opacity="0.85"/>
+  <path d="M56 86 C56 94, 64 98, 64 98 C64 98, 72 94, 72 86 Z" fill="#0f172a" opacity="0.8"/>
+
+  <!-- Neck -->
+  <path d="M53 72 L75 72 L73 86 L55 86 Z" fill="#fbd38d"/>
+  
+  <!-- Head -->
+  <ellipse cx="64" cy="54" rx="22" ry="25" fill="url(#skin-alexey)"/>
+  
+  <!-- Ears -->
+  <circle cx="41" cy="55" r="4.5" fill="#fbd38d"/>
+  <circle cx="87" cy="55" r="4.5" fill="#fbd38d"/>
+
+  <!-- Hair (Senior stylish short side-part) -->
+  <path d="M42 48 C40 28, 54 22, 66 22 C78 22, 88 28, 86 48 C80 44, 72 40, 62 40 C50 40, 44 44, 42 48 Z" fill="#3f3f46"/>
+  
+  <!-- Well-groomed Beard (Senior Buddy look) -->
+  <path d="M48 58 C48 76, 56 84, 64 84 C72 84, 80 76, 80 58 C80 64, 76 74, 64 74 C52 74, 48 64, 48 58 Z" fill="#3f3f46"/>
+  <!-- Mustache -->
+  <path d="M54 66 Q64 69 74 66 Q64 64 54 66 Z" fill="#27272a"/>
+
+  <!-- Eyes (Confident, friendly) -->
+  <circle cx="53" cy="52" r="2.8" fill="#0f172a"/>
+  <circle cx="75" cy="52" r="2.8" fill="#0f172a"/>
+  <circle cx="54" cy="51" r="0.9" fill="#ffffff"/>
+  <circle cx="76" cy="51" r="0.9" fill="#ffffff"/>
+
+  <!-- Eyebrows -->
+  <path d="M47 45 Q53 42 59 44" stroke="#27272a" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M69 44 Q75 42 81 45" stroke="#27272a" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+  <!-- Nose -->
+  <path d="M64 53 L62 61 L66 61" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <!-- Warm Smile within beard -->
+  <path d="M57 70 Q64 75 71 70" stroke="#fecaca" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Mentor Badge Pill -->
+  <g transform="translate(40, 108)">
+    <rect width="48" height="15" rx="7.5" fill="#00AAFF" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.5))"/>
+    <text x="24" y="11" font-family="system-ui, sans-serif" font-size="8.5" font-weight="900" fill="#082f49" text-anchor="middle" letter-spacing="0.5">MENTOR</text>
+  </g>
+</svg>

@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import Header, HTTPException, status
 from app.models.schemas import UserProfile, UserRole
 
-# Synthetic Predefined Users with realistic avatars
+# Synthetic Predefined Users with guaranteed local high-res avatars
 USERS_DATABASE: dict[str, UserProfile] = {
     "intern_1": UserProfile(
         user_id="intern_1",
@@ -13,7 +13,7 @@ USERS_DATABASE: dict[str, UserProfile] = {
         team="Order Management & Delivery Core",
         mentor_id="mentor_1",
         mentor_name="Алексей Смирнов",
-        avatar_url="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80"
+        avatar_url="/avatars/arseniy.svg"
     ),
     "mentor_1": UserProfile(
         user_id="mentor_1",
@@ -24,7 +24,7 @@ USERS_DATABASE: dict[str, UserProfile] = {
         team="Order Management & Delivery Core",
         mentor_id=None,
         mentor_name=None,
-        avatar_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80"
+        avatar_url="/avatars/alexey.svg"
     ),
     "lead_1": UserProfile(
         user_id="lead_1",
@@ -35,7 +35,7 @@ USERS_DATABASE: dict[str, UserProfile] = {
         team="Order Management & Delivery Core",
         mentor_id=None,
         mentor_name=None,
-        avatar_url="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80"
+        avatar_url="/avatars/ekaterina.svg"
     )
 }
 

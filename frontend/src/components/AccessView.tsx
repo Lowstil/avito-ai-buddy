@@ -46,7 +46,9 @@ export const AccessView: React.FC<AccessViewProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-[#965EEB]"></span>
-            <h2 className="text-xl font-black text-white">Доступы и рабочие инструменты</h2>
+            <h2 className="text-xl font-black text-white">
+              {isMentorOrLead ? 'Управление доступами стажёра: Арсений Новиков (Backend)' : 'Доступы и рабочие инструменты'}
+            </h2>
           </div>
           <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
             В Авито действует строгая политика безопасности (Zero Trust & Least Privilege). Стажёр отправляет запрос в ServiceDesk, а выдачу подтверждает наставник или тимлид.
@@ -69,7 +71,7 @@ export const AccessView: React.FC<AccessViewProps> = ({
           <span>
             {isMentorOrLead ? (
               <span>
-                Режим администратора: Вы вошли как <strong>{currentUser.name}</strong> ({currentUser.role === 'mentor' ? 'Наставник' : 'Тимлид'}). У вас есть право <strong>подтверждать выдачу доступов</strong> стажёрам.
+                Режим администратора: Вы вошли как <strong>{currentUser.name}</strong> ({currentUser.role === 'mentor' ? 'Наставник' : 'Тимлид'}). Вы утверждаете выдачу доступов для стажёра <strong>Арсения Новикова</strong>.
               </span>
             ) : (
               <span>

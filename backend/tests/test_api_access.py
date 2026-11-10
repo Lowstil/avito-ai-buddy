@@ -27,3 +27,9 @@ def test_grant_access_rbac(client, intern_headers, mentor_headers):
     mentor_res = client.post("/api/access/spt_cluster/grant", headers=mentor_headers)
     assert mentor_res.status_code == 200
     assert mentor_res.json()["status"] == "active"
+
+    # Mentor listing accesses shows the granted status for intern
+    mentor_list = client.get("/api/access", headers=mentor_headers)
+    assert mentor_list.status_code == 200
+    spt_item = next(it for it in mentor_list.json() if it["system_key"] == "spt_cluster")
+    assert spt_item["status"] == "active"

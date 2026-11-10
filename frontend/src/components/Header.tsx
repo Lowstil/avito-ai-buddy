@@ -20,6 +20,14 @@ export const Header: React.FC<HeaderProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const getAvatarSrc = (role: string, avatarUrl?: string) => {
+    if (avatarUrl && avatarUrl.startsWith('/avatars/')) return avatarUrl;
+    if (role === 'intern') return '/avatars/arseniy.svg';
+    if (role === 'mentor') return '/avatars/alexey.svg';
+    if (role === 'lead') return '/avatars/ekaterina.svg';
+    return '/avatars/arseniy.svg';
+  };
+
   const tabs = [
     { id: 'chat', label: 'AI-Наставник', icon: MessageSquare, badge: 'Live' },
     { id: 'checklist', label: 'Чек-лист стажёра', icon: CheckSquare },
@@ -96,9 +104,12 @@ export const Header: React.FC<HeaderProps> = ({
               className="glass-panel px-3 py-1.5 rounded-2xl flex items-center gap-2.5 border border-white/15 hover:border-white/30 transition-all cursor-pointer"
             >
               <img
-                src={currentUser.avatar_url}
+                src={getAvatarSrc(currentUser.role, currentUser.avatar_url)}
                 alt={currentUser.name}
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-[#04E061]/50"
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-[#04E061]/50 bg-slate-800"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getAvatarSrc(currentUser.role);
+                }}
               />
               <div className="text-left">
                 <p className="text-xs font-bold text-white leading-tight flex items-center gap-1.5">
@@ -145,7 +156,14 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <img src={u.avatar_url} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" alt="" />
+                      <img
+                        src={getAvatarSrc(u.role, u.avatar_url)}
+                        className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20 bg-slate-800"
+                        alt=""
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = getAvatarSrc(u.role);
+                        }}
+                      />
                       <div>
                         <p className="font-bold leading-tight text-white">{u.name}</p>
                         <span className="text-[10px] text-slate-400">
