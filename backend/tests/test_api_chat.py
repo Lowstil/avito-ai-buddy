@@ -60,3 +60,91 @@ def test_chat_access_intent(client, intern_headers):
     assert res.status_code == 200
     assert "Lens" in res.json()["reply"]
     assert res.json()["action_type"] == "access_requested"
+
+def test_chat_intern_absence_status(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Покажи статус моих отгулов"}, headers=intern_headers)
+    assert res.status_code == 200
+    assert "заявки на отсутствие" in res.json()["reply"].lower()
+    assert res.json()["action_type"] == "absence_status_checked"
+
+# --- MENTOR PERSONA TESTS ---
+
+def test_chat_mentor_progress_audit(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Дай сводку прогресса стажёра Арсения"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Арсения Новикова" in reply
+    assert "чек-листа" in reply
+    assert "Рекомендация наставнику" in reply
+
+def test_chat_mentor_1on1_agenda(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Составь план 1:1 встречи со стажёром"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Коучинговый план встречи 1:1" in reply
+    assert "Калибровка состояния" in reply
+    assert "Развивающая обратная связь" in reply
+
+def test_chat_mentor_code_review_checklist(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Дай чек-лист код-ревью для джуниор бэкендера"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Чек-лист наставника при код-ревью" in reply
+    assert "PostgreSQL" in reply or "Go" in reply
+
+def test_chat_mentor_equator_evaluation(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Как оценить готовность стажёра к экватору 3 месяца?"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Матрица оценки стажёра на Экваторе" in reply
+    assert "Hard Skills" in reply
+
+def test_chat_mentor_absence_management(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Какие правила согласования отгулов стажёра?"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Управление отгулами подопечного стажёра" in reply
+
+def test_chat_mentor_default_welcome(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Привет!"}, headers=mentor_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "ко-пилот по менторингу" in reply or "ассистент по менторингу" in reply
+
+# --- TEAM LEAD PERSONA TESTS ---
+
+def test_chat_lead_onboarding_metrics(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Покажи аналитику и метрики онбординга команды"}, headers=lead_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Time to First PR" in reply
+    assert "2.4" in reply
+    assert "Zero Bug Policy" in reply
+
+def test_chat_lead_offer_readiness(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Оцени готовность стажёра Арсения к офферу в штат"}, headers=lead_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Readiness Score" in reply
+    assert "82" in reply
+
+def test_chat_lead_mentor_capacity(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Какая нагрузка у наставника Алексея?"}, headers=lead_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Аудит нагрузки наставника" in reply
+    assert "Алексея Смирнова" in reply
+
+def test_chat_lead_sprint_allocation(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Как распределить задачи в спринте 24.1 команды delivery core?"}, headers=lead_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "Спринте 24.1" in reply
+    assert "Delivery Core" in reply
+
+def test_chat_lead_default_welcome(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Добрый день!"}, headers=lead_headers)
+    assert res.status_code == 200
+    reply = res.json()["reply"]
+    assert "аналитический ассистент" in reply
+    assert "Delivery Core" in reply

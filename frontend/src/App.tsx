@@ -8,7 +8,76 @@ import { ChatWidget } from './components/ChatWidget';
 import { AbsenceView } from './components/AbsenceView';
 import { AccessView } from './components/AccessView';
 import { Footer } from './components/Footer';
-import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
+import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight, UserCheck, TrendingUp } from 'lucide-react';
+
+const getInitialWelcomeMessage = (user: UserProfile): ChatMessage => {
+  const firstName = user.name.split(' ')[0];
+
+  if (user.role === 'mentor') {
+    return {
+      id: `welcome_mentor_${user.user_id}`,
+      sender: 'assistant',
+      content: (
+        `Привет, ${firstName}! Я твой AI-ко-пилот по менторингу стажёра **Арсения Новикова** 👨‍💻\n\n` +
+        "Чем я могу помочь наставнику:\n" +
+        "• 📊 **Сводка по стажёру:** статус задач чек-листа, блокеры и доступы\n" +
+        "• 🤝 **План встречи 1:1:** темы, развивающие вопросы и пункты похвалы\n" +
+        "• 🔍 **Чек-лист код-ревью:** ключевые паттерны и антипаттерны джуниор-кода (Go/Python)\n" +
+        "• 🎯 **Подготовка к Экватору (3 мес):** матрица компетенций и критерии оценки\n" +
+        "• 🏖️ **Кадровые согласования:** отгулы с интерактивной подсветкой в календаре\n\n" +
+        "Что разберём прямо сейчас?"
+      ),
+      timestamp: new Date().toISOString(),
+      suggested_chips: [
+        'Сводка прогресса стажёра',
+        'План встречи 1:1 для ментора',
+        'Чек-лист код-ревью для джуна',
+        'Оценка к Экватору (3 мес)'
+      ]
+    };
+  }
+
+  if (user.role === 'lead') {
+    return {
+      id: `welcome_lead_${user.user_id}`,
+      sender: 'assistant',
+      content: (
+        `Здравствуйте, ${firstName}! Я аналитический ассистент по онбордингу и эффективности инженерной команды **Delivery Core** 👩‍💼\n\n` +
+        "Чем я могу помочь тимлиду:\n" +
+        "• 📈 **Метрики онбординга:** динамика Time to First PR и скорость чек-листа\n" +
+        "• 🏆 **Готовность к офферу:** аналитика грейда Junior Backend (Readiness Score)\n" +
+        "• ⏱️ **Аудит нагрузки ментора:** контроль баланса времени Алексея Смирнова\n" +
+        "• 🚀 **Планирование Спринта 24.1:** безопасное распределение задач и защита ZBP\n\n" +
+        "Какой управленческий срез подготовить?"
+      ),
+      timestamp: new Date().toISOString(),
+      suggested_chips: [
+        'Метрики онбординга команды',
+        'Готовность стажёра к офферу',
+        'Нагрузка наставника Алексея',
+        'Задачи в Спринте 24.1'
+      ]
+    };
+  }
+
+  // Default: Intern
+  return {
+    id: `welcome_intern_${user.user_id}`,
+    sender: 'assistant',
+    content: (
+      `Привет, ${firstName}! Я твой цифровой наставник AI-buddy в Авито 🚀\n\n` +
+      "Я помогу освоиться в команде, объясню стандарты разработки, помогу оформить отгул без лишней бюрократии и подскажу следующие шаги по чек-листу.\n\n" +
+      "Чем помочь тебе прямо сейчас?"
+    ),
+    timestamp: new Date().toISOString(),
+    suggested_chips: [
+      'Как оформить отгул?',
+      'Какой мой следующий шаг?',
+      'Что такое Zero Bug Policy?',
+      'Стандарты Code Review'
+    ]
+  };
+};
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('chat');
@@ -20,25 +89,8 @@ export const App: React.FC = () => {
   const [absences, setAbsences] = useState<AbsenceRequest[]>([]);
   const [accessList, setAccessList] = useState<AccessItem[]>([]);
 
-  // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      content: (
-        "Привет! Я твой цифровой наставник AI-buddy в Авито 🚀\n" +
-        "Я помогу освоиться в команде, объясню стандарты разработки, помогу оформить отгул без лишней бюрократии и подскажу следующие шаги по чек-листу.\n\n" +
-        "Чем помочь тебе прямо сейчас?"
-      ),
-      timestamp: new Date().toISOString(),
-      suggested_chips: [
-        'Как оформить отгул?',
-        'Какой мой следующий шаг?',
-        'Что такое Zero Bug Policy?',
-        'Какие доступы мне нужны?'
-      ]
-    }
-  ]);
+  // Per-user chat histories
+  const [messagesByUser, setMessagesByUser] = useState<Record<string, ChatMessage[]>>({});
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const normalizeUserAvatar = (user: UserProfile): UserProfile => ({
@@ -47,6 +99,9 @@ export const App: React.FC = () => {
       ? user.avatar_url
       : (user.role === 'intern' ? '/avatars/arseniy.svg' : user.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg')
   });
+
+  // Current chat messages for active user
+  const currentMessages = messagesByUser[activeUserId] || (currentUser ? [getInitialWelcomeMessage(currentUser)] : []);
 
   // Load Initial Data
   const loadData = async (userId: string) => {
@@ -62,12 +117,24 @@ export const App: React.FC = () => {
         api.getAccessList(accessTargetId),
         api.getAnalyticsSummary(userId)
       ]);
+      const normalizedMe = normalizeUserAvatar(me);
       setUsers(allUsers.map(normalizeUserAvatar));
-      setCurrentUser(normalizeUserAvatar(me));
+      setCurrentUser(normalizedMe);
       setTasks(userTasks);
       setSummary(userSummary);
       setAbsences(userAbsences);
       setAccessList(userAccess);
+
+      // Initialize welcome message for this user if not already initialized
+      setMessagesByUser((prev) => {
+        if (!prev[userId] || prev[userId].length === 0) {
+          return {
+            ...prev,
+            [userId]: [getInitialWelcomeMessage(normalizedMe)]
+          };
+        }
+        return prev;
+      });
     } catch (e) {
       console.error('Failed to load initial data:', e);
     }
@@ -104,7 +171,12 @@ export const App: React.FC = () => {
       content: text,
       timestamp: new Date().toISOString()
     };
-    setMessages((prev) => [...prev, userMsg]);
+    
+    // Update active user's chat history
+    setMessagesByUser((prev) => ({
+      ...prev,
+      [activeUserId]: [...(prev[activeUserId] || []), userMsg]
+    }));
     setIsChatLoading(true);
 
     try {
@@ -119,7 +191,11 @@ export const App: React.FC = () => {
         suggested_chips: res.suggested_chips,
         sources: res.sources
       };
-      setMessages((prev) => [...prev, assistantMsg]);
+      
+      setMessagesByUser((prev) => ({
+        ...prev,
+        [activeUserId]: [...(prev[activeUserId] || []), assistantMsg]
+      }));
 
       // If an action was performed, refresh state
       if (res.action_type === 'absence_created') {
@@ -130,15 +206,18 @@ export const App: React.FC = () => {
         setAccessList(updatedAccess);
       }
     } catch (e: any) {
-      setMessages((prev) => [
+      setMessagesByUser((prev) => ({
         ...prev,
-        {
-          id: `msg_err_${Date.now()}`,
-          sender: 'assistant',
-          content: `⚠️ Не удалось связаться с сервисом: ${e.message || 'Ошибка сети'}. Пожалуйста, попробуй ещё раз.`,
-          timestamp: new Date().toISOString()
-        }
-      ]);
+        [activeUserId]: [
+          ...(prev[activeUserId] || []),
+          {
+            id: `msg_err_${Date.now()}`,
+            sender: 'assistant',
+            content: `⚠️ Не удалось связаться с сервисом: ${e.message || 'Ошибка сети'}. Пожалуйста, попробуй ещё раз.`,
+            timestamp: new Date().toISOString()
+          }
+        ]
+      }));
     } finally {
       setIsChatLoading(false);
     }
@@ -283,44 +362,130 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* 4 Meaningful Intern Stats Cards */}
+        {/* Dynamic 4 Stats Cards based on Active User Role */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            title="Дней до экватора"
-            value="42 дня"
-            change={50}
-            changeLabel="половина пути (6 недель)"
-            icon={Clock}
-            gradient="from-emerald-500/20 to-teal-500/5"
-            accentColor="#04E061"
-          />
-          <StatsCard
-            title="Прогресс онбординга"
-            value={`${summary?.progress_percentage || 0}%`}
-            change={summary?.completed_tasks || 0}
-            changeLabel={`из ${summary?.total_tasks || 0} задач чек-листа`}
-            icon={CheckSquare}
-            gradient="from-blue-500/20 to-cyan-500/5"
-            accentColor="#00AAFF"
-          />
-          <StatsCard
-            title="Баланс отгулов (Day-off)"
-            value="2 дня"
-            change={2}
-            changeLabel="доступно в ноябре"
-            icon={Zap}
-            gradient="from-purple-500/20 to-indigo-500/5"
-            accentColor="#965EEB"
-          />
-          <StatsCard
-            title="Текущий спринт"
-            value="Спринт 24.1"
-            change={4}
-            changeLabel="активные задачи команды"
-            icon={ShieldAlert}
-            gradient="from-rose-500/20 to-amber-500/5"
-            accentColor="#FF5252"
-          />
+          {currentUser.role === 'intern' && (
+            <>
+              <StatsCard
+                title="Дней до экватора"
+                value="42 дня"
+                change={50}
+                changeLabel="половина пути (6 недель)"
+                icon={Clock}
+                gradient="from-emerald-500/20 to-teal-500/5"
+                accentColor="#04E061"
+              />
+              <StatsCard
+                title="Прогресс онбординга"
+                value={`${summary?.progress_percentage || 0}%`}
+                change={summary?.completed_tasks || 0}
+                changeLabel={`из ${summary?.total_tasks || 0} задач чек-листа`}
+                icon={CheckSquare}
+                gradient="from-blue-500/20 to-cyan-500/5"
+                accentColor="#00AAFF"
+              />
+              <StatsCard
+                title="Баланс отгулов (Day-off)"
+                value="2 дня"
+                change={2}
+                changeLabel="доступно в ноябре"
+                icon={Zap}
+                gradient="from-purple-500/20 to-indigo-500/5"
+                accentColor="#965EEB"
+              />
+              <StatsCard
+                title="Текущий спринт"
+                value="Спринт 24.1"
+                change={4}
+                changeLabel="активные задачи команды"
+                icon={ShieldAlert}
+                gradient="from-rose-500/20 to-amber-500/5"
+                accentColor="#FF5252"
+              />
+            </>
+          )}
+
+          {currentUser.role === 'mentor' && (
+            <>
+              <StatsCard
+                title="Подопечный стажёр"
+                value="Арсений Н."
+                change={1}
+                changeLabel="1-я неделя • Backend"
+                icon={UserCheck}
+                gradient="from-emerald-500/20 to-teal-500/5"
+                accentColor="#04E061"
+              />
+              <StatsCard
+                title="Чек-лист подопечного"
+                value={`${summary?.progress_percentage || 33}%`}
+                change={summary?.completed_tasks || 2}
+                changeLabel={`из ${summary?.total_tasks || 6} задач закрыто`}
+                icon={CheckSquare}
+                gradient="from-blue-500/20 to-cyan-500/5"
+                accentColor="#00AAFF"
+              />
+              <StatsCard
+                title="Нагрузка менторинга"
+                value="4.5 ч / нед"
+                change={12}
+                changeLabel="в зелёной зоне (буфер 1.5ч)"
+                icon={Zap}
+                gradient="from-purple-500/20 to-indigo-500/5"
+                accentColor="#965EEB"
+              />
+              <StatsCard
+                title="Ожидают решения"
+                value="1 заявка"
+                change={1}
+                changeLabel="отгулы и доступы"
+                icon={ShieldAlert}
+                gradient="from-rose-500/20 to-amber-500/5"
+                accentColor="#FF5252"
+              />
+            </>
+          )}
+
+          {currentUser.role === 'lead' && (
+            <>
+              <StatsCard
+                title="Time to First PR"
+                value="2.4 дня"
+                change={48}
+                changeLabel="норматив < 5 дней (Avito)"
+                icon={Clock}
+                gradient="from-emerald-500/20 to-teal-500/5"
+                accentColor="#04E061"
+              />
+              <StatsCard
+                title="Offer Readiness Score"
+                value="82 / 100"
+                change={82}
+                changeLabel="траектория Junior Backend"
+                icon={TrendingUp}
+                gradient="from-blue-500/20 to-cyan-500/5"
+                accentColor="#00AAFF"
+              />
+              <StatsCard
+                title="Загрузка Delivery Core"
+                value="94%"
+                change={94}
+                changeLabel="Спринт 24.1 в графике"
+                icon={Zap}
+                gradient="from-purple-500/20 to-indigo-500/5"
+                accentColor="#965EEB"
+              />
+              <StatsCard
+                title="Стажёров в штате"
+                value="1 активный"
+                change={0}
+                changeLabel="0 сходов с программы"
+                icon={ShieldAlert}
+                gradient="from-rose-500/20 to-amber-500/5"
+                accentColor="#FF5252"
+              />
+            </>
+          )}
         </div>
 
         {/* TAB 1: AI-Buddy Chat with Side Quick Actions */}
@@ -332,41 +497,117 @@ export const App: React.FC = () => {
               <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-[#04E061]" />
-                  Быстрые действия
+                  Быстрые действия ({currentUser.role === 'mentor' ? 'Наставник' : currentUser.role === 'lead' ? 'Тимлид' : 'Стажёр'})
                 </h4>
                 
                 <div className="space-y-2">
-                  <button
-                    onClick={() => handleSendMessage('Мне нужен отгул на пятницу, помоги оформить')}
-                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
-                  >
-                    <span>🏖️ Оформить отгул (Day-off)</span>
-                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
-                  </button>
+                  {currentUser.role === 'intern' && (
+                    <>
+                      <button
+                        onClick={() => handleSendMessage('Мне нужен отгул на пятницу, помоги оформить')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🏖️ Оформить отгул (Day-off)</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
+                      </button>
 
-                  <button
-                    onClick={() => handleSendMessage('Какой мой следующий шаг по чек-листу стажёра?')}
-                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
-                  >
-                    <span>🎯 Узнать следующий шаг</span>
-                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
-                  </button>
+                      <button
+                        onClick={() => handleSendMessage('Какой мой следующий шаг по чек-листу стажёра?')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🎯 Узнать следующий шаг</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
+                      </button>
 
-                  <button
-                    onClick={() => handleSendMessage('Что такое Zero Bug Policy в Авито простыми словами?')}
-                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
-                  >
-                    <span>🛡️ Правило Zero Bug Policy</span>
-                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
-                  </button>
+                      <button
+                        onClick={() => handleSendMessage('Что такое Zero Bug Policy в Авито простыми словами?')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🛡️ Правило Zero Bug Policy</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
+                      </button>
 
-                  <button
-                    onClick={() => handleSendMessage('Помоги подготовиться к встрече 1:1 с наставником')}
-                    className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
-                  >
-                    <span>🤝 Подготовка к встрече 1:1</span>
-                    <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
-                  </button>
+                      <button
+                        onClick={() => handleSendMessage('Помоги подготовиться к встрече 1:1 с наставником')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🤝 Подготовка к встрече 1:1</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
+                      </button>
+                    </>
+                  )}
+
+                  {currentUser.role === 'mentor' && (
+                    <>
+                      <button
+                        onClick={() => handleSendMessage('Сводка прогресса стажёра Арсения')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>📊 Сводка прогресса подопечного</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Составь план 1:1 встречи со стажёром Арсением')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🤝 План встречи 1:1 для ментора</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Чек-лист код-ревью для джуниор бэкендера (Go, Postgres, Kafka)')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🔍 Чек-лист код-ревью для джуна</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Оценка готовности стажёра к Экватору (3 месяца)')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🎯 Оценка к Экватору (3 мес)</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
+                      </button>
+                    </>
+                  )}
+
+                  {currentUser.role === 'lead' && (
+                    <>
+                      <button
+                        onClick={() => handleSendMessage('Метрики онбординга команды: Time to First PR и ZBP')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>📈 Метрики онбординга команды</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Оценка готовности стажёра Арсения к офферу Junior Backend')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🏆 Готовность стажёра к офферу</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Аудит нагрузки наставника Алексея Смирнова')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>⏱️ Нагрузка наставника Алексея</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
+                      </button>
+
+                      <button
+                        onClick={() => handleSendMessage('Распределение задач Delivery Core в Спринте 24.1')}
+                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                      >
+                        <span>🚀 Задачи в Спринте 24.1</span>
+                        <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -374,17 +615,24 @@ export const App: React.FC = () => {
               {summary && (
                 <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Твой прогресс</span>
-                    <span className="text-xs font-black text-[#04E061]">{summary.progress_percentage}%</span>
+                    <span className="text-xs font-bold text-white">
+                      {currentUser.role === 'intern' ? 'Твой прогресс' : currentUser.role === 'mentor' ? 'Прогресс Арсения' : 'Индекс команды'}
+                    </span>
+                    <span className="text-xs font-black text-[#04E061]">
+                      {currentUser.role === 'lead' ? '82/100' : `${summary.progress_percentage}%`}
+                    </span>
                   </div>
                   <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-[#04E061] to-[#00AAFF] rounded-full"
-                      style={{ width: `${summary.progress_percentage}%` }}
+                      style={{ width: `${currentUser.role === 'lead' ? 82 : summary.progress_percentage}%` }}
                     />
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Закрыто <strong>{summary.completed_tasks}</strong> из {summary.total_tasks} задач чек-листа.
+                    {currentUser.role === 'lead'
+                      ? 'Опережение графика онбординга. Time to PR: 2.4 дня.'
+                      : `Закрыто ${summary.completed_tasks} из ${summary.total_tasks} задач чек-листа.`
+                    }
                   </p>
                   <button
                     onClick={() => setActiveTab('checklist')}
@@ -399,7 +647,7 @@ export const App: React.FC = () => {
             {/* Right Chat Center (8 cols) */}
             <div className="lg:col-span-8">
               <ChatWidget
-                messages={messages}
+                messages={currentMessages}
                 isLoading={isChatLoading}
                 onSendMessage={handleSendMessage}
                 onNavigateToTab={setActiveTab}

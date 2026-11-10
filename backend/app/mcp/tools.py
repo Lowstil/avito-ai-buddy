@@ -17,6 +17,8 @@ class MCPToolRegistry:
             "update_checklist_task": self.tool_update_checklist_task,
             "search_playbook": self.tool_search_playbook,
             "generate_1on1_summary": self.tool_generate_1on1_summary,
+            "generate_mentor_guide": self.tool_generate_mentor_guide,
+            "get_team_lead_analytics": self.tool_get_team_lead_analytics,
         }
 
     def execute(self, tool_name: str, **kwargs) -> dict[str, Any]:
@@ -124,6 +126,39 @@ class MCPToolRegistry:
         return {
             "status": "success",
             "summary_points": agenda
+        }
+
+    def tool_generate_mentor_guide(self, user_id: str = "intern_1") -> dict[str, Any]:
+        summary = checklist_service.get_summary(user_id)
+        tasks = checklist_service.get_tasks(user_id)
+        completed = [t for t in tasks if t.status == "completed"]
+        in_progress = [t for t in tasks if t.status == "in_progress"]
+        todo = [t for t in tasks if t.status == "todo" and t.priority == "high"]
+        
+        return {
+            "status": "success",
+            "intern_name": "Арсений Новиков",
+            "progress_percentage": summary.progress_percentage,
+            "completed_count": summary.completed_tasks,
+            "total_count": summary.total_tasks,
+            "completed_tasks": [t.title for t in completed],
+            "in_progress_tasks": [t.title for t in in_progress],
+            "focus_tasks": [t.title for t in todo]
+        }
+
+    def tool_get_team_lead_analytics(self) -> dict[str, Any]:
+        summary = checklist_service.get_summary("intern_1")
+        return {
+            "status": "success",
+            "team_name": "Order Management & Delivery Core",
+            "intern_name": "Арсений Новиков",
+            "mentor_name": "Алексей Смирнов",
+            "time_to_first_pr_days": 2.4,
+            "checklist_progress_pct": summary.progress_percentage,
+            "zero_bug_compliance_pct": 100,
+            "mentor_weekly_hours": 4.5,
+            "offer_readiness_score": 82,
+            "sprint_name": "Спринт 24.1"
         }
 
 mcp_tool_registry = MCPToolRegistry()
