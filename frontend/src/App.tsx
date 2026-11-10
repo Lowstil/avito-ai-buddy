@@ -7,7 +7,6 @@ import type {
   AccessItem,
   ChatMessage,
   UserGamificationProfile,
-  ThemeMode,
 } from './types';
 import { api, getGamificationProfile } from './api/client';
 import { Header } from './components/Header';
@@ -17,7 +16,6 @@ import { ChatWidget } from './components/ChatWidget';
 import { AbsenceView } from './components/AbsenceView';
 import { AccessView } from './components/AccessView';
 import { CodeReviewPlayground } from './components/CodeReviewPlayground';
-import { GlossaryView } from './components/GlossaryView';
 import { AchievementsView } from './components/AchievementsView';
 import { Footer } from './components/Footer';
 import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight, UserCheck, TrendingUp } from 'lucide-react';
@@ -100,29 +98,7 @@ export const App: React.FC = () => {
   const [summary, setSummary] = useState<ChecklistSummary | null>(null);
   const [absences, setAbsences] = useState<AbsenceRequest[]>([]);
   const [accessList, setAccessList] = useState<AccessItem[]>([]);
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('avito_theme');
-    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
-  });
   const [gamification, setGamification] = useState<UserGamificationProfile | null>(null);
-
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('avito_theme', next);
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-      document.body.classList.add('theme-light');
-    } else {
-      document.documentElement.classList.remove('theme-light');
-      document.body.classList.remove('theme-light');
-    }
-  }, [theme]);
 
   // Per-user chat histories
   const [messagesByUser, setMessagesByUser] = useState<Record<string, ChatMessage[]>>({});
@@ -341,9 +317,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen relative overflow-hidden flex flex-col justify-between selection:bg-[#04E061]/30 transition-colors duration-300 ${
-      theme === 'light' ? 'bg-[#f4f6fa] text-slate-900' : 'bg-[#0b0f19] text-slate-100'
-    }`}>
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 relative overflow-hidden flex flex-col justify-between selection:bg-[#04E061]/30">
       
       {/* Background Glowing Liquid Spheres */}
       <div className="glow-sphere-1" />
@@ -357,8 +331,6 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onSwitchUser={handleSwitchUser}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         gamification={gamification}
       />
 
@@ -740,7 +712,6 @@ export const App: React.FC = () => {
         {/* TAB 5: Pre-flight Code Review Playground */}
         {activeTab === 'code-review' && (
           <CodeReviewPlayground
-            theme={theme}
             onAskAI={(codePrompt: string) => {
               setActiveTab('chat');
               handleSendMessage(codePrompt);
@@ -748,21 +719,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* TAB 6: Avito Jargon Buster Glossary */}
-        {activeTab === 'glossary' && (
-          <GlossaryView
-            theme={theme}
-            onAskAI={(termPrompt: string) => {
-              setActiveTab('chat');
-              handleSendMessage(termPrompt);
-            }}
-          />
-        )}
-
-        {/* TAB 7: Gamification Badges & Levels */}
+        {/* TAB 6: Gamification Badges & Levels */}
         {activeTab === 'achievements' && (
           <AchievementsView
-            theme={theme}
             userId={activeUserId}
             onAskAI={(badgePrompt: string) => {
               setActiveTab('chat');

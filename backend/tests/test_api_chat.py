@@ -148,3 +148,35 @@ def test_chat_lead_default_welcome(client, lead_headers):
     reply = res.json()["reply"]
     assert "аналитический ассистент" in reply
     assert "Delivery Core" in reply
+
+def test_chat_code_review_rule_context_explanation(client, intern_headers):
+    # This was the exact question from user screenshot!
+    msg = 'Объясни подробнее правило "Проброс контекста (Context Timeout)" в Авито и как правильно его соблюдать.'
+    res = client.post("/api/chat", json={"message": msg}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data.get("action_type") != "absence_created"
+    assert "Проброс контекста" in data["reply"]
+    assert "WithTimeout" in data["reply"] or "QueryContext" in data["reply"]
+
+def test_chat_code_review_rule_panic_explanation(client, intern_headers):
+    msg = 'Объясни правило "Запрет паник (Zero Bug Policy)"'
+    res = client.post("/api/chat", json={"message": msg}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data.get("action_type") != "absence_created"
+    assert "Запрет `panic()`" in data["reply"] or "Zero Bug Policy" in data["reply"]
+
+def test_chat_cancel_absence_on_technical_question(client, intern_headers):
+    # User triggers absence flow
+    r1 = client.post("/api/chat", json={"message": "Оформи отгул"}, headers=intern_headers)
+    assert r1.status_code == 200
+    
+    # User instead asks technical question
+    r2 = client.post("/api/chat", json={"message": "Как работает LIMIT в SQL запросах в Авито?"}, headers=intern_headers)
+    assert r2.status_code == 200
+    data = r2.json()
+    # MUST NOT book an absence!
+    assert data.get("action_type") != "absence_created"
+    assert "LIMIT" in data["reply"]
+

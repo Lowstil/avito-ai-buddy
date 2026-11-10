@@ -125,8 +125,10 @@ class CodeReviewIssue(BaseModel):
     line_number: Optional[int] = None
     snippet: Optional[str] = None
     message: str
+    impact: Optional[str] = None
     recommendation: str
     suggested_diff: Optional[str] = None
+    full_explanation: Optional[str] = None
 
 class CodeReviewResponse(BaseModel):
     score: int = Field(..., ge=0, le=100)
@@ -136,6 +138,8 @@ class CodeReviewResponse(BaseModel):
     checked_rules_count: int = 10
     zbp_compliant: bool = True
     mentor_notes: str = ""
+    full_refactored_code: Optional[str] = None
+    ai_executive_summary: Optional[str] = None
 
 # --- Feature 12: Avito Jargon Buster (Glossary) ---
 class GlossaryTerm(BaseModel):

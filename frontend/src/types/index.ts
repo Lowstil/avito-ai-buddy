@@ -79,8 +79,10 @@ export interface CodeReviewIssue {
   line_number?: number;
   snippet?: string;
   message: string;
+  impact?: string;
   recommendation: string;
   suggested_diff?: string;
+  full_explanation?: string;
 }
 
 export interface CodeReviewResponse {
@@ -91,6 +93,8 @@ export interface CodeReviewResponse {
   checked_rules_count: number;
   zbp_compliant: boolean;
   mentor_notes: string;
+  full_refactored_code?: string;
+  ai_executive_summary?: string;
 }
 
 // Feature 12: Avito Jargon Buster

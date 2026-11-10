@@ -166,7 +166,7 @@ async function run() {
   }
 
   // =========================================================================
-  // EXTENSION 1: PRE-FLIGHT CODE REVIEW PLAYGROUND (Go / ZBP Analyzer)
+  // MODULE 1: PRE-FLIGHT CODE REVIEW PLAYGROUND (Go / ZBP Analyzer)
   // =========================================================================
   console.log('Scene 7: Pre-flight Code Review Playground...');
   await clickButtonByText(page, 'Pre-flight Review');
@@ -174,44 +174,31 @@ async function run() {
   await capture(page, 15);
 
   // Analyze buggy code
-  await clickButtonByText(page, 'Запустить анализ ZBP & Go');
+  await clickButtonByText(page, 'Запустить AI-Анализ');
   await new Promise(r => setTimeout(r, 1500));
   await capture(page, 25);
   await saveKeyScreenshot(page, '17_code_review_playground_analysis.png');
 
+  // Switch to Full AI Fixed Code tab
+  await clickButtonByText(page, 'Исправленный код от AI');
+  await new Promise(r => setTimeout(r, 1200));
+  await capture(page, 20);
+
+  // Switch back to all issues
+  await clickButtonByText(page, 'Все замечания');
+  await new Promise(r => setTimeout(r, 800));
+
   // Load Clean Avito Go Preset
-  await clickButtonByText(page, 'Идеальный код по стандартам Авито');
+  await clickButtonByText(page, 'Идеальный код по ZBP');
   await new Promise(r => setTimeout(r, 800));
-  await clickButtonByText(page, 'Запустить анализ ZBP & Go');
+  await clickButtonByText(page, 'Запустить AI-Анализ');
   await new Promise(r => setTimeout(r, 1500));
   await capture(page, 20);
 
   // =========================================================================
-  // EXTENSION 2: JARGON BUSTER GLOSSARY
+  // MODULE 2: GAMIFICATION BADGES & LEVELS (Avito Start)
   // =========================================================================
-  console.log('Scene 8: Avito Jargon Buster Glossary...');
-  await clickButtonByText(page, 'Глоссарий сленга');
-  await new Promise(r => setTimeout(r, 1500));
-  await capture(page, 20);
-  await saveKeyScreenshot(page, '18_glossary_jargon_buster.png');
-
-  // Filter category
-  await clickButtonByText(page, 'Инфраструктура');
-  await new Promise(r => setTimeout(r, 800));
-  await capture(page, 15);
-
-  // Search keyword
-  const searchInput = await page.$('input[placeholder*="Поиск по термину"]');
-  if (searchInput) {
-    await searchInput.type('ZBP', { delay: 30 });
-    await new Promise(r => setTimeout(r, 800));
-    await capture(page, 15);
-  }
-
-  // =========================================================================
-  // EXTENSION 3: GAMIFICATION BADGES & LEVELS
-  // =========================================================================
-  console.log('Scene 9: Gamification Badges & Levels...');
+  console.log('Scene 8: Gamification Badges & Levels...');
   await clickButtonByText(page, 'Бейджи и XP');
   await new Promise(r => setTimeout(r, 1500));
   await capture(page, 20);
@@ -221,24 +208,6 @@ async function run() {
   await clickButtonByText(page, 'Отпраздновать успехи');
   await new Promise(r => setTimeout(r, 1200));
   await capture(page, 15);
-
-  // =========================================================================
-  // EXTENSION 4: LIGHT / DARK THEME SWITCHER (Frosted Glass)
-  // =========================================================================
-  console.log('Scene 10: Light Theme Frosted Glass...');
-  // Find theme toggle button (button with title containing theme)
-  const themeBtn = await page.$('button[title*="тему"]');
-  if (themeBtn) {
-    await themeBtn.click();
-    await new Promise(r => setTimeout(r, 1200));
-    await capture(page, 25);
-    await saveKeyScreenshot(page, '20_light_theme_frosted_glass.png');
-
-    // Switch back to Dark Glass
-    await themeBtn.click();
-    await new Promise(r => setTimeout(r, 1000));
-    await capture(page, 10);
-  }
 
   // =========================================================================
   // SCENE 11: MENTOR VIEW (АЛЕКСЕЙ СМИРНОВ)

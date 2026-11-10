@@ -240,38 +240,145 @@ class AgentService:
         # -------------------------------------------------------------
         # ROLE 3: INTERN PERSPECTIVE (Арсений Новиков)
         # -------------------------------------------------------------
-        
-        # A. Multi-turn Slot Filling: Day-off booking
+
+        # Check for Engineering / Code Review / Technical questions FIRST
+        # If user asks an engineering question, cancel any lingering absence state!
+        is_tech_question = any(kw in lower_text for kw in [
+            "правило", "контекст", "context", "timeout", "таймаут", "panic", "паник",
+            "zbp", "zero bug policy", "limit", "лимит", "n+1", "%w", "wrap", "оборачиван",
+            "лог", "zap", "slog", "транзакц", "rollback", "горутин", "code review", "код-ревью"
+        ])
+
+        if is_tech_question:
+            self._states[user_id] = {}  # Clear any active absence flow
+
+            # 1. Rule: Context Timeout
+            if any(kw in lower_text for kw in ["контекст", "context", "timeout", "таймаут", "проброс контекста"]):
+                return ChatResponse(
+                    reply=(
+                        "🛡️ **Инженерный стандарт Авито: Проброс контекста (Context Timeout)**\n\n"
+                        "В микросервисной архитектуре Авито (миллионы RPS) этот стандарт является **критическим блокером** на код-ревью:\n\n"
+                        "### 💥 Почему это критично на масштабах Авито:\n"
+                        "• Любой сетевой I/O (SQL-запрос, gRPC-вызов, HTTP-клиент, чтение из Redis/Kafka) без контекста использует бесконечный дедлайн.\n"
+                        "• При деградации внешней базы данных все горутины зависают в ожидании ответа. Пул в 500–1000 горутин мгновенно исчерпывает RAM пода, вызывая **OOMKilled** и каскадную аварию всего кластера доставки.\n\n"
+                        "### 🛠️ Как правильно писать по стандартам Авито:\n"
+                        "```go\n"
+                        "// 1. Создаём дочерний контекст с явным таймаутом операции\n"
+                        "ctx, cancel := context.WithTimeout(ctx, 3*time.Second)\n"
+                        "defer cancel() // защита от утечки ресурсов контекста\n\n"
+                        "// 2. Всегда вызываем Context-aware методы базы данных\n"
+                        "rows, err := db.QueryContext(ctx, query, args...)\n"
+                        "if err != nil {\n"
+                        "    return fmt.Errorf(\"query delivery orders failed: %w\", err)\n"
+                        "}\n"
+                        "```\n\n"
+                        "💡 *Совет ментора Алексея:* В HTTP-хэндлерах всегда бери `r.Context()`, никогда не создавай `context.Background()` внутри бизнес-логики!"
+                    ),
+                    suggested_chips=["Запрет паник (ZBP)", "Оборачивание ошибок %w", "Лимиты в SQL"],
+                    sources=["AvitoTech: Effective Go & Distributed Systems", "Zero Bug Policy Manual"]
+                )
+
+            # 2. Rule: Panic Prohibition (Zero Bug Policy)
+            if any(kw in lower_text for kw in ["panic", "паник", "запрет паник"]):
+                return ChatResponse(
+                    reply=(
+                        "🚫 **Инженерный стандарт Авито: Запрет `panic()` (Zero Bug Policy)**\n\n"
+                        "По регламенту надежности Авито использование `panic()` в прикладном runtime-коде — **строжайшее нарушение (P0 блокер)**.\n\n"
+                        "### 💥 Почему паники запрещены:\n"
+                        "• Необработанная паника завершает процесс операционной системы. Падает весь инстанс пода в Kubernetes, обрывая сотни параллельных клиентских сессий покупателей и курьеров.\n\n"
+                        "### 🛠️ Как правильно обрабатывать ошибки:\n"
+                        "```go\n"
+                        "// ❌ ПЛОХО: обрушивает под\n"
+                        "if err != nil {\n"
+                        "    panic(err)\n"
+                        "}\n\n"
+                        "// ✅ ХОРОШО: возврат типизированной ошибки наверх по стеку\n"
+                        "if err != nil {\n"
+                        "    return nil, fmt.Errorf(\"calculate order price failed: %w\", err)\n"
+                        "}\n"
+                        "```\n"
+                        "💡 Паника допускается исключительно в `init()` на старте сервиса, если не удалось распарсить обязательный конфиг или подгрузить TLS-сертификат."
+                    ),
+                    suggested_chips=["Проброс контекста", "Оборачивание ошибок %w", "Стандарты Code Review"],
+                    sources=["Zero Bug Policy: Reliability Standards", "Avito Backend Core Guidelines"]
+                )
+
+            # 3. Rule: Error wrapping %w
+            if any(kw in lower_text for kw in ["%w", "оборачиван", "fmt.errorf", "errors.is", "wrap"]):
+                return ChatResponse(
+                    reply=(
+                        "🔗 **Инженерный стандарт Авито: Оборачивание ошибок через `%w`**\n\n"
+                        "В Go 1.13+ директива `%w` в `fmt.Errorf` сохраняет цепочку вложенных ошибок для дерева трассировки.\n\n"
+                        "### 💥 Что происходит при `%v` или `%s`:\n"
+                        "• Ошибка преобразуется в простую строку. Вышестоящий слой не может сделать `errors.Is(err, sql.ErrNoRows)` или `errors.As(err, &customErr)`.\n"
+                        "• Sentry не может сгруппировать инциденты по первопричине, загрязняя дашборды дежурных инженеров.\n\n"
+                        "### 🛠️ Как правильно:\n"
+                        "```go\n"
+                        "// ✅ Сохраняем стек и интерфейс Unwrap()\n"
+                        "return fmt.Errorf(\"fetch courier status: %w\", err)\n"
+                        "```"
+                    ),
+                    suggested_chips=["Запрет паник", "Проброс контекста", "Структурированное логирование"],
+                    sources=["Effective Go: Error Handling", "Avito Sentry Integration Best Practices"]
+                )
+
+            # 4. Rule: SQL LIMIT & N+1 Protection
+            if any(kw in lower_text for kw in ["limit", "лимит", "n+1", "выборк", "sql"]):
+                return ChatResponse(
+                    reply=(
+                        "⚡ **Инженерный стандарт Авито: Ограничение выборки (LIMIT & N+1)**\n\n"
+                        "Таблицы Авито содержат десятки миллионов объявлений и заказов. Запрос без `LIMIT` — прямой путь к падению базы данных.\n\n"
+                        "### 💥 Последствия неограниченного SELECT:\n"
+                        "• Запрос без `LIMIT` пытается передать по сети терабайты данных, вызывая блокировку буферного пула PostgreSQL и мгновенный OOM пода.\n"
+                        "• Паттерн N+1 (запрос в цикле для каждого элемента) умножает нагрузку на базу в тысячи раз.\n\n"
+                        "### 🛠️ Как правильно:\n"
+                        "```sql\n"
+                        "-- ✅ Всегда задавайте явный LIMIT и используйте Keyset пагинацию\n"
+                        "SELECT id, user_id, status FROM delivery_orders \n"
+                        "WHERE status = 'pending' AND id > $1 \n"
+                        "ORDER BY id ASC LIMIT $2;\n"
+                        "```"
+                    ),
+                    suggested_chips=["Проброс контекста", "Безопасность транзакций", "Тестовые стенды SPT"],
+                    sources=["Avito Database Guidelines (PostgreSQL at High Scale)"]
+                )
+
+        # Multi-turn Slot Filling: Day-off booking
         if state.get("step") == "awaiting_absence_details":
-            date_match = re.search(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[а-яА-Я]+|\d{1,2}\.\d{1,2})", text)
-            date_val = date_match.group(1) if date_match else "2026-11-20"
-            reason_val = text if len(text) > 5 else "По личным обстоятельствам"
+            has_date_or_reason = bool(re.search(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[а-яА-Я]+|\d{1,2}\.\d{1,2})", text)) or any(kw in lower_text for kw in ["врач", "сессия", "экзамен", "дела", "заболел", "отгул", "выходной", "личное", "универ"])
             
-            result = mcp_tool_registry.execute(
-                "request_absence",
-                user_id=user.user_id,
-                user_name=user.name,
-                start_date="2026-11-20",
-                reason=reason_val,
-                absence_type="day_off"
-            )
-            self._states[user_id] = {}  # Clear state
-            req = result.get("request", {})
-            return ChatResponse(
-                reply=(
-                    f"🎉 **Заявка на отгул успешно сформирована и зарегистрирована!**\n\n"
-                    f"• **Номер заявки:** #{req.get('id', 'ABS-2026-NEW')}\n"
-                    f"• **Сотрудник:** {user.name} ({user.track} стажёр)\n"
-                    f"• **Дата:** {req.get('start_date', '2026-11-20')}\n"
-                    f"• **Причина:** {req.get('reason', reason_val)}\n"
-                    f"• **Статус:** ⏳ *На согласовании у наставника ({user.mentor_name or 'Алексея Смирнова'})*\n\n"
-                    f"Заявка уже появилась в разделе «Отгулы (Day-off)» с подсветкой дня в календаре."
-                ),
-                action_type="absence_created",
-                action_payload=req,
-                suggested_chips=["Проверить статус отгулов", "Что сделать на этой неделе?", "Стандарты Code Review"],
-                sources=["Корпоративный сервис 'Отсутствия' Авито"]
-            )
+            if not has_date_or_reason:
+                self._states[user_id] = {}  # User changed topic, cancel flow!
+            else:
+                date_match = re.search(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[а-яА-Я]+|\d{1,2}\.\d{1,2})", text)
+                date_val = date_match.group(1) if date_match else "2026-11-20"
+                reason_val = text if len(text) > 5 else "По личным обстоятельствам"
+                
+                result = mcp_tool_registry.execute(
+                    "request_absence",
+                    user_id=user.user_id,
+                    user_name=user.name,
+                    start_date="2026-11-20",
+                    reason=reason_val,
+                    absence_type="day_off"
+                )
+                self._states[user_id] = {}  # Clear state
+                req = result.get("request", {})
+                return ChatResponse(
+                    reply=(
+                        f"🎉 **Заявка на отгул успешно сформирована и зарегистрирована!**\n\n"
+                        f"• **Номер заявки:** #{req.get('id', 'ABS-2026-NEW')}\n"
+                        f"• **Сотрудник:** {user.name} ({user.track} стажёр)\n"
+                        f"• **Дата:** {req.get('start_date', '2026-11-20')}\n"
+                        f"• **Причина:** {req.get('reason', reason_val)}\n"
+                        f"• **Статус:** ⏳ *На согласовании у наставника ({user.mentor_name or 'Алексея Смирнова'})*\n\n"
+                        f"Заявка уже появилась в разделе «Отгулы (Day-off)» с подсветкой дня в календаре."
+                    ),
+                    action_type="absence_created",
+                    action_payload=req,
+                    suggested_chips=["Проверить статус отгулов", "Что сделать на этой неделе?", "Стандарты Code Review"],
+                    sources=["Корпоративный сервис 'Отсутствия' Авито"]
+                )
 
         # B. Check Absence Status (Must precede new absence trigger)
         if any(kw in lower_text for kw in ["статус отгул", "мои заявки", "одобрили", "что с отгул"]) or ("статус" in lower_text and ("отгул" in lower_text or "заяв" in lower_text)):
