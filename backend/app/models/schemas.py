@@ -110,3 +110,61 @@ class AnalyticsEvent(BaseModel):
     user_id: str
     properties: dict[str, Any] = {}
     timestamp: datetime = Field(default_factory=datetime.now)
+
+# --- Feature 1: Pre-flight Code Review ---
+class CodeReviewRequest(BaseModel):
+    code: str
+    language: Literal["go", "python", "sql", "auto"] = "go"
+    service_context: Optional[str] = "Delivery Core"
+
+class CodeReviewIssue(BaseModel):
+    id: str
+    rule_id: str
+    rule_name: str
+    severity: Literal["blocker", "warning", "info"]
+    line_number: Optional[int] = None
+    snippet: Optional[str] = None
+    message: str
+    recommendation: str
+    suggested_diff: Optional[str] = None
+
+class CodeReviewResponse(BaseModel):
+    score: int = Field(..., ge=0, le=100)
+    status: Literal["passed", "changes_requested", "blocked"]
+    summary: str
+    issues: list[CodeReviewIssue] = []
+    checked_rules_count: int = 10
+    zbp_compliant: bool = True
+    mentor_notes: str = ""
+
+# --- Feature 12: Avito Jargon Buster (Glossary) ---
+class GlossaryTerm(BaseModel):
+    id: str
+    term: str
+    category: str
+    definition: str
+    internal_context: str
+    example_phrase: str
+    tags: list[str] = []
+
+# --- Feature: Gamification & Badges ---
+class AchievementBadge(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    xp: int
+    unlocked: bool = False
+    unlocked_at: Optional[datetime] = None
+    progress: int = 0
+
+class UserGamificationProfile(BaseModel):
+    user_id: str
+    level: int
+    level_name: str
+    current_xp: int
+    next_level_xp: int
+    total_badges_count: int
+    unlocked_badges_count: int
+    badges: list[AchievementBadge] = []

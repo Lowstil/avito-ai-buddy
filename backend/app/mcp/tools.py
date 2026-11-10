@@ -3,7 +3,8 @@ from app.services.absence_service import absence_service
 from app.services.access_service import access_service
 from app.services.checklist_service import checklist_service
 from app.services.playbook_rag import playbook_rag
-from app.models.schemas import AbsenceRequestCreate, AccessRequestCreate
+from app.services.code_review_service import code_review_service
+from app.models.schemas import AbsenceRequestCreate, AccessRequestCreate, CodeReviewRequest
 
 class MCPToolRegistry:
     """Implements Model Context Protocol (MCP) Tool execution for Avito Corporate Services."""
@@ -19,6 +20,7 @@ class MCPToolRegistry:
             "generate_1on1_summary": self.tool_generate_1on1_summary,
             "generate_mentor_guide": self.tool_generate_mentor_guide,
             "get_team_lead_analytics": self.tool_get_team_lead_analytics,
+            "analyze_code_snippet": self.tool_analyze_code_snippet,
         }
 
     def execute(self, tool_name: str, **kwargs) -> dict[str, Any]:
@@ -159,6 +161,19 @@ class MCPToolRegistry:
             "mentor_weekly_hours": 4.5,
             "offer_readiness_score": 82,
             "sprint_name": "Спринт 24.1"
+        }
+
+    def tool_analyze_code_snippet(self, code: str, language: str = "go") -> dict[str, Any]:
+        req = CodeReviewRequest(code=code, language=language)
+        res = code_review_service.analyze_code(req)
+        return {
+            "status": "success",
+            "score": res.score,
+            "status_label": res.status,
+            "summary": res.summary,
+            "issues_count": len(res.issues),
+            "zbp_compliant": res.zbp_compliant,
+            "issues": [i.model_dump() for i in res.issues]
         }
 
 mcp_tool_registry = MCPToolRegistry()

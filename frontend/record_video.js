@@ -13,7 +13,11 @@ const artifactDir = 'C:\\Users\\Alexandro\\.gemini\\antigravity\\brain\\fb4c37c1
 });
 
 // Clean existing frames
-fs.readdirSync(framesDir).forEach(f => fs.unlinkSync(path.join(framesDir, f)));
+fs.readdirSync(framesDir).forEach(f => {
+  try {
+    fs.unlinkSync(path.join(framesDir, f));
+  } catch (e) {}
+});
 
 let frameIndex = 0;
 
@@ -29,7 +33,9 @@ async function saveKeyScreenshot(page, filename) {
   const p1 = path.join(screenshotsDir, filename);
   const p2 = path.join(artifactDir, filename);
   await page.screenshot({ path: p1, fullPage: false });
-  fs.copyFileSync(p1, p2);
+  try {
+    fs.copyFileSync(p1, p2);
+  } catch (e) {}
   console.log(`[KEY SCREENSHOT] Saved ${filename}`);
 }
 
@@ -58,7 +64,7 @@ async function typeText(page, selector, text, delay = 15) {
 }
 
 async function run() {
-  console.log('--- Starting Ultra HD Multi-Persona Walkthrough Recording (Intern, Mentor, Team Lead) ---');
+  console.log('--- Starting Ultra HD Walkthrough Recording with All 4 Extensions ---');
   const browser = await puppeteer.launch({
     executablePath: chromePath,
     headless: true,
@@ -75,18 +81,18 @@ async function run() {
   // SCENE 1: INTERN VIEW (АРСЕНИЙ НОВИКОВ)
   // =========================================================================
   console.log('Scene 1: Intern Dashboard Overview...');
-  await capture(page, 20);
+  await capture(page, 15);
   await saveKeyScreenshot(page, '01_intern_dashboard_overview.png');
 
   // AI Chat: Zero Bug Policy
   console.log('Scene 2: Intern asking about Zero Bug Policy...');
   await clickButtonByText(page, 'Zero Bug Policy');
   await new Promise(r => setTimeout(r, 1800));
-  await capture(page, 25);
+  await capture(page, 20);
 
   // AI Chat: Natural Language Day-Off Booking Flow
   console.log('Scene 3: Intern Booking Day-Off via AI...');
-  await clickButtonByText(page, 'Оформить отгул');
+  await clickButtonByText(page, 'Как оформить отгул?');
   await new Promise(r => setTimeout(r, 1200));
   await capture(page, 15);
 
@@ -94,20 +100,20 @@ async function run() {
   await typeText(page, inputSel, '24 ноября, экзамен в магистратуре');
   await page.keyboard.press('Enter');
   await new Promise(r => setTimeout(r, 2000));
-  await capture(page, 25);
+  await capture(page, 20);
   await saveKeyScreenshot(page, '02_intern_chat_dayoff_booked.png');
 
   // Interactive Absences Calendar Tab
   console.log('Scene 4: Intern in Absences Tab & Glassy Calendar...');
-  await clickButtonByText(page, 'Отгулы (Day-off)');
+  await clickButtonByText(page, 'Отгулы');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
   await saveKeyScreenshot(page, '03_intern_absences_calendar_tab.png');
 
   // Open Detailed Calendar Modal
   await clickButtonByText(page, 'Оформить отгул в календаре');
   await new Promise(r => setTimeout(r, 1000));
-  await capture(page, 15);
+  await capture(page, 12);
 
   // Pick day 27
   const dayButtons = await page.$$('button:has(span.text-xs)');
@@ -129,22 +135,22 @@ async function run() {
 
   await clickButtonByText(page, 'Отправить заявку');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
 
   // Access Tab: Request Lens k8s
   console.log('Scene 5: Intern requesting Lens access...');
-  await clickButtonByText(page, 'Доступы и стенды');
+  await clickButtonByText(page, 'Доступы');
   await new Promise(r => setTimeout(r, 1000));
   await capture(page, 15);
 
   await clickButtonByText(page, 'Запросить доступ в 1 клик');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
   await saveKeyScreenshot(page, '04_intern_access_requested.png');
 
   // Checklist Tab: Note and Task Modal
   console.log('Scene 6: Intern Checklist...');
-  await clickButtonByText(page, 'Чек-лист стажёра');
+  await clickButtonByText(page, 'Чек-лист');
   await new Promise(r => setTimeout(r, 1000));
   await capture(page, 15);
 
@@ -152,7 +158,7 @@ async function run() {
   if (taskCards.length > 0) {
     await taskCards[0].click();
     await new Promise(r => setTimeout(r, 1000));
-    await capture(page, 20);
+    await capture(page, 15);
     await saveKeyScreenshot(page, '05_intern_task_modal_notes.png');
 
     await clickButtonByText(page, 'Закрыть');
@@ -160,98 +166,173 @@ async function run() {
   }
 
   // =========================================================================
-  // SCENE 2: MENTOR VIEW (АЛЕКСЕЙ СМИРНОВ)
+  // EXTENSION 1: PRE-FLIGHT CODE REVIEW PLAYGROUND (Go / ZBP Analyzer)
   // =========================================================================
-  console.log('Scene 7: Switching to Mentor Алексей Смирнов...');
-  await clickButtonByText(page, 'Алексей');
+  console.log('Scene 7: Pre-flight Code Review Playground...');
+  await clickButtonByText(page, 'Pre-flight Review');
+  await new Promise(r => setTimeout(r, 1500));
+  await capture(page, 15);
+
+  // Analyze buggy code
+  await clickButtonByText(page, 'Запустить анализ ZBP & Go');
   await new Promise(r => setTimeout(r, 1500));
   await capture(page, 25);
+  await saveKeyScreenshot(page, '17_code_review_playground_analysis.png');
+
+  // Load Clean Avito Go Preset
+  await clickButtonByText(page, 'Идеальный код по стандартам Авито');
+  await new Promise(r => setTimeout(r, 800));
+  await clickButtonByText(page, 'Запустить анализ ZBP & Go');
+  await new Promise(r => setTimeout(r, 1500));
+  await capture(page, 20);
+
+  // =========================================================================
+  // EXTENSION 2: JARGON BUSTER GLOSSARY
+  // =========================================================================
+  console.log('Scene 8: Avito Jargon Buster Glossary...');
+  await clickButtonByText(page, 'Глоссарий сленга');
+  await new Promise(r => setTimeout(r, 1500));
+  await capture(page, 20);
+  await saveKeyScreenshot(page, '18_glossary_jargon_buster.png');
+
+  // Filter category
+  await clickButtonByText(page, 'Инфраструктура');
+  await new Promise(r => setTimeout(r, 800));
+  await capture(page, 15);
+
+  // Search keyword
+  const searchInput = await page.$('input[placeholder*="Поиск по термину"]');
+  if (searchInput) {
+    await searchInput.type('ZBP', { delay: 30 });
+    await new Promise(r => setTimeout(r, 800));
+    await capture(page, 15);
+  }
+
+  // =========================================================================
+  // EXTENSION 3: GAMIFICATION BADGES & LEVELS
+  // =========================================================================
+  console.log('Scene 9: Gamification Badges & Levels...');
+  await clickButtonByText(page, 'Бейджи и XP');
+  await new Promise(r => setTimeout(r, 1500));
+  await capture(page, 20);
+  await saveKeyScreenshot(page, '19_achievements_gamification_badges.png');
+
+  // Trigger celebration
+  await clickButtonByText(page, 'Отпраздновать успехи');
+  await new Promise(r => setTimeout(r, 1200));
+  await capture(page, 15);
+
+  // =========================================================================
+  // EXTENSION 4: LIGHT / DARK THEME SWITCHER (Frosted Glass)
+  // =========================================================================
+  console.log('Scene 10: Light Theme Frosted Glass...');
+  // Find theme toggle button (button with title containing theme)
+  const themeBtn = await page.$('button[title*="тему"]');
+  if (themeBtn) {
+    await themeBtn.click();
+    await new Promise(r => setTimeout(r, 1200));
+    await capture(page, 25);
+    await saveKeyScreenshot(page, '20_light_theme_frosted_glass.png');
+
+    // Switch back to Dark Glass
+    await themeBtn.click();
+    await new Promise(r => setTimeout(r, 1000));
+    await capture(page, 10);
+  }
+
+  // =========================================================================
+  // SCENE 11: MENTOR VIEW (АЛЕКСЕЙ СМИРНОВ)
+  // =========================================================================
+  console.log('Scene 11: Switching to Mentor Алексей Смирнов...');
+  await clickButtonByText(page, 'Алексей');
+  await new Promise(r => setTimeout(r, 1500));
+  await capture(page, 20);
   await saveKeyScreenshot(page, '06_mentor_dashboard_overview.png');
 
   // Go to Chat Tab as Mentor
-  await clickButtonByText(page, 'AI-наставник (Чат)');
+  await clickButtonByText(page, 'AI-Наставник');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
 
   // Mentor Quick Action 1: Intern Progress Audit
-  console.log('Scene 8: Mentor asking for Intern Progress Audit...');
-  await clickButtonByText(page, 'Сводка прогресса подопечного');
+  console.log('Scene 12: Mentor asking for Intern Progress Audit...');
+  await clickButtonByText(page, 'Сводка прогресса стажёра');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '07_mentor_ai_progress_audit.png');
 
   // Mentor Quick Action 2: 1:1 Coaching Plan
-  console.log('Scene 9: Mentor asking for 1:1 Coaching Agenda...');
+  console.log('Scene 13: Mentor asking for 1:1 Coaching Agenda...');
   await clickButtonByText(page, 'План встречи 1:1 для ментора');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '08_mentor_ai_1on1_coaching_agenda.png');
 
   // Mentor Quick Action 3: Junior Code Review Checklist
-  console.log('Scene 10: Mentor asking for Junior Code Review Checklist...');
+  console.log('Scene 14: Mentor asking for Junior Code Review Checklist...');
   await clickButtonByText(page, 'Чек-лист код-ревью для джуна');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '09_mentor_ai_code_review_checklist.png');
 
   // Mentor Quick Action 4: Equator Evaluation (3 months)
-  console.log('Scene 11: Mentor asking for Equator Evaluation...');
-  await clickButtonByText(page, 'Оценка к Экватору');
+  console.log('Scene 15: Mentor asking for Equator Evaluation...');
+  await clickButtonByText(page, 'Оценка к Экватору (3 мес)');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '10_mentor_ai_equator_evaluation.png');
 
   // Mentor approving Intern's Access Request in Access Tab
-  console.log('Scene 12: Mentor approving Lens access...');
-  await clickButtonByText(page, 'Доступы и стенды');
+  console.log('Scene 16: Mentor approving Lens access...');
+  await clickButtonByText(page, 'Доступы');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
 
   await clickButtonByText(page, 'Подтвердить выдачу стажёру');
   await new Promise(r => setTimeout(r, 1500));
-  await capture(page, 25);
+  await capture(page, 20);
   await saveKeyScreenshot(page, '11_mentor_access_granted.png');
 
   // =========================================================================
-  // SCENE 3: TEAM LEAD VIEW (ЕКАТЕРИНА СОКОЛОВА)
+  // SCENE 17: TEAM LEAD VIEW (ЕКАТЕРИНА СОКОЛОВА)
   // =========================================================================
-  console.log('Scene 13: Switching to Team Lead Екатерина Соколова...');
+  console.log('Scene 17: Switching to Team Lead Екатерина Соколова...');
   await clickButtonByText(page, 'Екатерина');
   await new Promise(r => setTimeout(r, 1500));
-  await capture(page, 25);
+  await capture(page, 20);
   await saveKeyScreenshot(page, '12_team_lead_dashboard_stats.png');
 
   // Go to Chat Tab as Team Lead
-  await clickButtonByText(page, 'AI-наставник (Чат)');
+  await clickButtonByText(page, 'AI-Наставник');
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 20);
+  await capture(page, 15);
 
   // Lead Action 1: Team Onboarding Metrics & DORA Time to First PR
-  console.log('Scene 14: Team Lead asking for Onboarding Metrics & Time to PR...');
+  console.log('Scene 18: Team Lead asking for Onboarding Metrics & Time to PR...');
   await clickButtonByText(page, 'Метрики онбординга команды');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '13_team_lead_ai_metrics_time_to_pr.png');
 
   // Lead Action 2: Offer Readiness Assessment Score
-  console.log('Scene 15: Team Lead asking for Offer Readiness Assessment...');
+  console.log('Scene 19: Team Lead asking for Offer Readiness Assessment...');
   await clickButtonByText(page, 'Готовность стажёра к офферу');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '14_team_lead_ai_offer_readiness.png');
 
   // Lead Action 3: Mentor Capacity Audit
-  console.log('Scene 16: Team Lead asking for Mentor Capacity Audit...');
+  console.log('Scene 20: Team Lead asking for Mentor Capacity Audit...');
   await clickButtonByText(page, 'Нагрузка наставника Алексея');
   await new Promise(r => setTimeout(r, 2200));
-  await capture(page, 30);
+  await capture(page, 25);
   await saveKeyScreenshot(page, '15_team_lead_ai_mentor_capacity.png');
 
   // Smooth scroll to Glassy Liquid footer
-  console.log('Scene 17: Glassy Liquid Footer...');
+  console.log('Scene 21: Glassy Liquid Footer...');
   await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
   await new Promise(r => setTimeout(r, 1200));
-  await capture(page, 25);
+  await capture(page, 20);
   await saveKeyScreenshot(page, '16_glassy_liquid_footer.png');
 
   await browser.close();

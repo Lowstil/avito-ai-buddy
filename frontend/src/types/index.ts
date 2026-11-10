@@ -69,3 +69,63 @@ export interface ChatMessage {
   suggested_chips?: string[];
   sources?: string[];
 }
+
+// Feature 1: Pre-flight Code Review
+export interface CodeReviewIssue {
+  id: string;
+  rule_id: string;
+  rule_name: string;
+  severity: 'blocker' | 'warning' | 'info';
+  line_number?: number;
+  snippet?: string;
+  message: string;
+  recommendation: string;
+  suggested_diff?: string;
+}
+
+export interface CodeReviewResponse {
+  score: number;
+  status: 'passed' | 'changes_requested' | 'blocked';
+  summary: string;
+  issues: CodeReviewIssue[];
+  checked_rules_count: number;
+  zbp_compliant: boolean;
+  mentor_notes: string;
+}
+
+// Feature 12: Avito Jargon Buster
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  category: string;
+  definition: string;
+  internal_context: string;
+  example_phrase: string;
+  tags: string[];
+}
+
+// Feature: Gamification & Badges
+export interface AchievementBadge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: string;
+  xp: number;
+  unlocked: boolean;
+  unlocked_at?: string;
+  progress: number;
+}
+
+export interface UserGamificationProfile {
+  user_id: string;
+  level: number;
+  level_name: string;
+  current_xp: number;
+  next_level_xp: number;
+  total_badges_count: number;
+  unlocked_badges_count: number;
+  badges: AchievementBadge[];
+}
+
+export type ThemeMode = 'dark' | 'light';

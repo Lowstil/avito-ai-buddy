@@ -1,4 +1,13 @@
-import type { UserProfile, ChecklistTask, ChecklistSummary, AbsenceRequest, AccessItem } from '../types';
+import type {
+  UserProfile,
+  ChecklistTask,
+  ChecklistSummary,
+  AbsenceRequest,
+  AccessItem,
+  CodeReviewResponse,
+  GlossaryTerm,
+  UserGamificationProfile
+} from '../types';
 
 const API_BASE = '';
 
@@ -86,5 +95,41 @@ export const api = {
     fetchWithAuth('/api/analytics/event', activeUserId, {
       method: 'POST',
       body: JSON.stringify({ event_name: eventName, user_id: activeUserId, properties })
-    })
+    }),
+
+  // Feature 1: Pre-flight Code Review
+  analyzeCode: (activeUserId: string, code: string, language: string = 'go'): Promise<CodeReviewResponse> =>
+    fetchWithAuth('/api/code-review/analyze', activeUserId, {
+      method: 'POST',
+      body: JSON.stringify({ code, language })
+    }),
+
+  // Feature 12: Glossary
+  getGlossary: (activeUserId: string, category?: string, search?: string): Promise<GlossaryTerm[]> => {
+    const params = new URLSearchParams();
+    if (category && category !== 'Все') params.append('category', category);
+    if (search) params.append('search', search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return fetchWithAuth(`/api/glossary${query}`, activeUserId);
+  },
+
+  getGlossaryCategories: (activeUserId: string): Promise<string[]> =>
+    fetchWithAuth('/api/glossary/categories', activeUserId),
+
+  // Feature: Gamification
+  getGamificationProfile: (activeUserId: string): Promise<UserGamificationProfile> =>
+    fetchWithAuth('/api/gamification/profile', activeUserId)
 };
+
+// Named exports for convenient direct imports
+export const analyzeCode = (code: string, language: string = 'go', userId: string = 'intern_1') =>
+  api.analyzeCode(userId, code, language);
+
+export const getGlossary = (category?: string, search?: string, userId: string = 'intern_1') =>
+  api.getGlossary(userId, category, search);
+
+export const getGlossaryCategories = (userId: string = 'intern_1') =>
+  api.getGlossaryCategories(userId);
+
+export const getGamificationProfile = (userId: string = 'intern_1') =>
+  api.getGamificationProfile(userId);

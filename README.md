@@ -59,6 +59,15 @@
 |:---:|:---:|
 | ![Offer Readiness Score](docs/screenshots/14_team_lead_ai_offer_readiness.png) | ![Нагрузка наставника](docs/screenshots/15_team_lead_ai_mentor_capacity.png) |
 
+### 4. Новые расширения и инженерные модули (Hackathon Extensions)
+| Pre-flight Code Review Playground (Go & ZBP) | Глоссарий сленга Авито (Jargon Buster) |
+|:---:|:---:|
+| ![Pre-flight Code Review](docs/screenshots/17_code_review_playground_analysis.png) | ![Глоссарий сленга](docs/screenshots/18_glossary_jargon_buster.png) |
+
+| Геймификация: Бейджи и уровни (Avito Start Badges) | Светлая тема Frosted Glass (Мягкое матовое стекло) |
+|:---:|:---:|
+| ![Геймификация и бейджи](docs/screenshots/19_achievements_gamification_badges.png) | ![Светлая тема Frosted Glass](docs/screenshots/20_light_theme_frosted_glass.png) |
+
 ---
 
 ## 🌟 Ключевые возможности и реализованные сценарии
@@ -68,20 +77,37 @@
 * **Наставник:** анализ прогресса подопечного, синтез коучинговой повестки 1:1, профессиональный чек-лист код-ревью для Go/Python (проброс `ctx`, таймауты к БД, N+1, лимиты), матрица оценки готовности к Экватору.
 * **Тимлид:** аналитика Time to First PR (2.4 дня), Offer Readiness Score (82/100), аудит емкости наставника (88% прод-разработка, 12% менторинг), распределение задач Delivery Core в Спринте 24.1.
 
-### 2. Оформление кадрового действия (Заказ отгула / Day-off)
+### 2. Pre-flight Code Review Playground (Инженерный анализатор ZBP)
+* **10 золотых правил инженерии Авито:** контекстные таймауты (`context.WithTimeout`), запрет `panic()` в прод-коде, оборачивание ошибок через `%w` (`fmt.Errorf`), исключение N+1 и обязательный `LIMIT`, безопасные транзакции (`defer tx.Rollback()`), HTTP-таймауты.
+* **Расчёт Health Score (0-100) и статуса:** `passed`, `changes_requested`, `blocked`.
+* **Готовые пресеты кода** и интерактивная кнопка копирования рекомендуемого Diff.
+
+### 3. Глоссарий сленга и терминов Авито (Jargon Buster)
+* Интерактивная база терминов (SPT, PaaS, Stash, Lens k8s, ZBP, Поезд релизов, Регресс, Буфер, Дейлик, 1:1, P0/P1, Bruno).
+* Поиск в реальном времени, фильтрация по категориям, реальные цитаты с дейли и кнопка «Спросить AI-buddy о термине».
+
+### 4. Система геймификации и бейджей (Avito Start Badges & Levels)
+* Прогресс-бар опыта (XP) и 4 уровня адаптации: *Новичок → Продвинутый стажёр → Уверенный джуниор → Готов к найму в штат (Junior Ready)*.
+* 8 тематических бейджей с прогрессом выполнения и праздничным конфетти.
+
+### 5. Переключатель светлой и тёмной темы (Glassy Liquid Dark & Milky Frosted Light)
+* Мягкий неоновый киберпанк-индиго (`#0b0f19`) с цветными светящимися сферами.
+* Дневной режим «Milky Frosted Glass» (`#f4f6fa`) с сохранением фирменных акцентов Авито.
+
+### 6. Оформление кадрового действия (Заказ отгула / Day-off)
 * **Диалоговый слот-филлинг:** сбор даты и причины, проверка лимита (2 дня в месяц), вызов MCP инструмента `request_absence`, регистрация заявки `#ABS-2026-X`.
 * **Интерактивный календарь месяца:** наглядный выбор даты стажёром и цветовая подсветка запрошенного дня в календаре наставника.
 * **Мотивированный отказ:** наставник не может отклонить заявку без заполнения причины — реализовано модальное окно с быстрыми чипами причин.
 
-### 3. Сквозная синхронизация и RBAC доступов
+### 7. Сквозная синхронизация и RBAC доступов
 * Стажёр запрашивает доступы (Lens k8s, SPT, Sentry, Grafana) в 1 клик.
 * Наставник видит заявки подопечного в режиме реального времени и подтверждает их (`grant_access`). Статус мгновенно обновляется до «Активен».
 
-### 4. Интерактивный чек-лист адаптации стажёра (Backend трек Авито)
+### 8. Интерактивный чек-лист адаптации стажёра (Backend трек Авито)
 * 1 неделя (Agile, VPN, Bruno, Lens, SPT, ZBP, Grafana, Go, Stash), 2 неделя (PaaS), 1 месяц (Защита ПДн и КИ), Экватор 3 мес, Выпускной.
 * Персональные заметки к каждой задаче, прямая связка с AI-консультантом.
 
-### 5. Защита данных (Security Guardrails)
+### 9. Защита данных (Security Guardrails)
 * Запросы конфиденциальной информации (зарплаты, секреты БД, админ-токены) немедленно блокируются со ссылкой на политику защиты коммерческой тайны (КИ) Авито.
 
 ---
@@ -173,7 +199,7 @@ docker compose up --build
 
 ## 🧪 Запуск тестов и отчёт о покрытии (>80%)
 
-Покрытие строк прикладного кода тестами составляет **92%** (при требовании регламента >80%). Всего реализовано и пройдено **49 автоматических тестов**.
+Покрытие строк прикладного кода тестами составляет **93%** (при требовании регламента >80%). Всего реализовано и пройдено **59 автоматических тестов**.
 
 ```bash
 # Запуск единого скрипта полной верификации (SDD, тесты, сборка)
@@ -186,26 +212,32 @@ pytest --cov=app --cov-report=term-missing --cov-report=html:htmlcov
 
 ### Сводка покрытия (pytest-cov):
 ```text
-Name                                Stmts   Miss  Cover
--------------------------------------------------------
-app/api/auth.py                        10      0   100%
-app/api/chat.py                         8      0   100%
-app/api/checklist.py                   18      0   100%
-app/api/health.py                      10      0   100%
-app/api/analytics.py                   14      0   100%
-app/core/rbac.py                       14      0   100%
-app/services/playbook_rag.py           21      0   100%
-app/api/access.py                      24      1    96%
-app/mcp/tools.py                       69      4    94%
-app/main.py                            25      2    92%
-app/services/absence_service.py        30      3    90%
-app/api/absence.py                     30      4    87%
-app/services/checklist_service.py      42      6    86%
-app/services/agent_service.py          95     14    85%
-app/services/access_service.py         33      6    82%
--------------------------------------------------------
-TOTAL                                 513     40    92%  ✅
-======================== 49 passed in 0.48s ========================
+Name                                   Stmts   Miss  Cover
+----------------------------------------------------------
+app/api/auth.py                           10      0   100%
+app/api/chat.py                            8      0   100%
+app/api/checklist.py                      18      0   100%
+app/api/code_review.py                     8      0   100%
+app/api/gamification.py                    8      0   100%
+app/api/glossary.py                       12      0   100%
+app/api/health.py                         10      0   100%
+app/api/analytics.py                      14      0   100%
+app/core/rbac.py                          14      0   100%
+app/services/playbook_rag.py              21      0   100%
+app/services/gamification_service.py      25      0   100%
+app/services/glossary_service.py          15      0   100%
+app/api/access.py                         24      1    96%
+app/main.py                               31      2    94%
+app/mcp/tools.py                          74      7    91%
+app/services/code_review_service.py       59      6    90%
+app/services/absence_service.py           30      3    90%
+app/api/absence.py                        31      4    87%
+app/services/checklist_service.py         42      6    86%
+app/services/agent_service.py             95     14    85%
+app/services/access_service.py            33      6    82%
+----------------------------------------------------------
+TOTAL                                    673     49    93%  ✅
+======================== 59 passed in 0.86s ========================
 ```
 Интерактивный HTML-отчёт сохранён в папке `backend/htmlcov/index.html`.
 

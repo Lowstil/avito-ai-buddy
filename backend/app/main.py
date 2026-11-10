@@ -8,6 +8,9 @@ from app.api.absence import router as absence_router
 from app.api.access import router as access_router
 from app.api.analytics import router as analytics_router
 from app.api.health import router as health_router
+from app.api.code_review import router as code_review_router
+from app.api.glossary import router as glossary_router
+from app.api.gamification import router as gamification_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -32,6 +35,9 @@ app.include_router(checklist_router)
 app.include_router(absence_router)
 app.include_router(access_router)
 app.include_router(analytics_router)
+app.include_router(code_review_router)
+app.include_router(glossary_router)
+app.include_router(gamification_router)
 
 @app.get("/")
 def root():
