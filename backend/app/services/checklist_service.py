@@ -3,9 +3,13 @@ from datetime import datetime
 from typing import Optional
 from app.models.schemas import ChecklistTask, ChecklistSummary
 from app.core.seed_data import INITIAL_CHECKLIST_TASKS
+from app.services.gamification_service import gamification_service
 
 class ChecklistService:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         # In-memory storage keyed by user_id
         self._user_tasks: dict[str, list[ChecklistTask]] = {
             "intern_1": deepcopy(INITIAL_CHECKLIST_TASKS)
@@ -29,11 +33,22 @@ class ChecklistService:
         tasks = self.get_tasks(user_id)
         for task in tasks:
             if task.id == task_id:
+                prev_status = task.status
                 task.status = status
                 if status == "completed":
                     task.completed_at = datetime.now()
+                    if prev_status != "completed":
+                        gamification_service.award_xp(user_id, 50, f"Выполнение задачи чек-листа: {task.title}")
                 else:
                     task.completed_at = None
+                return task
+        return None
+
+    def update_task_note(self, user_id: str, task_id: str, notes: str) -> Optional[ChecklistTask]:
+        tasks = self.get_tasks(user_id)
+        for task in tasks:
+            if task.id == task_id:
+                task.notes = notes
                 return task
         return None
 

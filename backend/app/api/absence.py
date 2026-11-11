@@ -18,11 +18,17 @@ def create_absence(
     payload: AbsenceRequestCreate,
     user: UserProfile = Depends(get_current_user)
 ):
-    return absence_service.create_absence(
-        user_id=user.user_id,
-        user_name=user.name,
-        payload=payload
-    )
+    try:
+        return absence_service.create_absence(
+            user_id=user.user_id,
+            user_name=user.name,
+            payload=payload
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 @router.post("/{absence_id}/approve", response_model=AbsenceRequest)
 def approve_absence(

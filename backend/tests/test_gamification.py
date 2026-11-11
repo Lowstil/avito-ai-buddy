@@ -56,3 +56,41 @@ def test_gamification_mentor_lead_access(client, mentor_headers, lead_headers):
     r_l = client.get("/api/gamification/profile", headers=lead_headers)
     assert r_l.status_code == 200
     assert r_l.json()["user_id"] == "lead_1"
+
+def test_award_xp_dynamic():
+    service = GamificationService()
+    p_before = service.get_user_profile("dynamic_intern")
+    service.award_xp("dynamic_intern", 150, "Отличный спринт")
+    p_after = service.get_user_profile("dynamic_intern")
+    assert p_after.current_xp == p_before.current_xp + 150
+
+def test_checklist_task_completion_awards_xp(client, intern_headers):
+    prof_before = client.get("/api/gamification/profile", headers=intern_headers).json()["current_xp"]
+    # Complete task
+    res = client.patch("/api/checklist/task_be_3/status?status=completed", headers=intern_headers)
+    assert res.status_code == 200
+    prof_after = client.get("/api/gamification/profile", headers=intern_headers).json()["current_xp"]
+    assert prof_after >= prof_before + 50
+
+def test_code_review_passed_awards_xp(client, intern_headers):
+    prof_before = client.get("/api/gamification/profile", headers=intern_headers).json()["current_xp"]
+    clean_go = """
+package main
+
+import (
+    "context"
+    "fmt"
+    "time"
+)
+
+func CleanRun(ctx context.Context) error {
+    ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+    defer cancel()
+    return fmt.Errorf("ok: %w", nil)
+}
+"""
+    res = client.post("/api/code-review/analyze", json={"code": clean_go, "language": "go"}, headers=intern_headers)
+    assert res.status_code == 200
+    assert res.json()["status"] == "passed"
+    prof_after = client.get("/api/gamification/profile", headers=intern_headers).json()["current_xp"]
+    assert prof_after >= prof_before + 100

@@ -21,6 +21,7 @@ export interface ChecklistTask {
   completed_at?: string;
   priority: 'low' | 'medium' | 'high';
   resource_link?: string;
+  notes?: string;
 }
 
 export interface ChecklistSummary {

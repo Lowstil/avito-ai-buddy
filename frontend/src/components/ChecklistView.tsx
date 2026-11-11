@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChecklistTask, ChecklistSummary } from '../types';
+import { api } from '../api/client';
 import { CheckCircle2, Circle, Clock, Sparkles, X, BookOpen, Edit3, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ChecklistViewProps {
   tasks: ChecklistTask[];
   summary: ChecklistSummary | null;
+  activeUserId?: string;
   onToggleTask: (taskId: string, currentStatus: string) => void;
   onAskBuddyAboutTask: (taskTitle: string) => void;
 }
@@ -14,6 +16,7 @@ interface ChecklistViewProps {
 export const ChecklistView: React.FC<ChecklistViewProps> = ({
   tasks,
   summary,
+  activeUserId,
   onToggleTask,
   onAskBuddyAboutTask
 }) => {
@@ -23,6 +26,24 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
   const [taskNotes, setTaskNotes] = useState<Record<string, string>>({
     'task_be_4': 'Обсудил с наставником Алексеем, настроили алерты в Sentry для сервиса доставки.'
   });
+
+  useEffect(() => {
+    const loadedNotes: Record<string, string> = {};
+    tasks.forEach((t) => {
+      if (t.notes) {
+        loadedNotes[t.id] = t.notes;
+      }
+    });
+    setTaskNotes((prev) => ({ ...loadedNotes, ...prev }));
+  }, [tasks]);
+
+  const handleSaveNote = async (taskId: string, notes: string) => {
+    try {
+      await api.updateTaskNote(activeUserId || 'intern_1', taskId, notes);
+    } catch (e) {
+      console.error('Failed to save task note:', e);
+    }
+  };
 
   const periods = [
     { key: 'all', label: 'Все этапы' },
@@ -298,6 +319,7 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
               <textarea
                 value={taskNotes[activeModalTask.id] || ''}
                 onChange={(e) => setTaskNotes({ ...taskNotes, [activeModalTask.id]: e.target.value })}
+                onBlur={(e) => handleSaveNote(activeModalTask.id, e.target.value)}
                 placeholder="Запишите сюда вопросы для 1:1, важные ссылки или договорённости с наставником..."
                 rows={3}
                 className="w-full bg-slate-900/90 border border-white/15 rounded-2xl p-3 text-xs text-white focus:outline-none focus:border-[#04E061]"

@@ -28,3 +28,32 @@ def test_update_task_status(client, intern_headers):
 def test_update_nonexistent_task(client, intern_headers):
     res = client.patch("/api/checklist/non_existent_123/status?status=completed", headers=intern_headers)
     assert res.status_code == 404
+
+def test_update_task_note_json(client, intern_headers):
+    res = client.patch(
+        "/api/checklist/task_be_1/note",
+        json={"notes": "Обсудили с наставником на 1:1"},
+        headers=intern_headers
+    )
+    assert res.status_code == 200
+    task = res.json()
+    assert task["id"] == "task_be_1"
+    assert task["notes"] == "Обсудили с наставником на 1:1"
+
+def test_update_task_note_query(client, intern_headers):
+    res = client.patch(
+        "/api/checklist/task_be_2/note?note=Стенд+настроен",
+        headers=intern_headers
+    )
+    assert res.status_code == 200
+    task = res.json()
+    assert task["id"] == "task_be_2"
+    assert "Стенд настроен" in task["notes"]
+
+def test_update_note_nonexistent_task(client, intern_headers):
+    res = client.patch(
+        "/api/checklist/non_existent_404/note",
+        json={"notes": "Не должно найтись"},
+        headers=intern_headers
+    )
+    assert res.status_code == 404

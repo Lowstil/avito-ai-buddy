@@ -46,6 +46,12 @@ export const api = {
   updateTaskStatus: (activeUserId: string, taskId: string, status: string): Promise<ChecklistTask> => 
     fetchWithAuth(`/api/checklist/${taskId}/status?status=${status}`, activeUserId, { method: 'PATCH' }),
 
+  updateTaskNote: (activeUserId: string, taskId: string, notes: string): Promise<ChecklistTask> => 
+    fetchWithAuth(`/api/checklist/${taskId}/note`, activeUserId, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes })
+    }),
+
   getAbsences: (activeUserId: string): Promise<AbsenceRequest[]> => 
     fetchWithAuth('/api/absences', activeUserId),
 

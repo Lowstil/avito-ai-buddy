@@ -135,8 +135,11 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
     try {
       const res = await api.analyzeCode(activeUserId, code, language);
       setResult(res);
-      if (res.issues.length === 0) {
+      if (res.status === 'passed' && res.score >= 90 && res.issues.length === 0) {
         confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      }
+      if (!res.full_refactored_code && activeTab === 'fixed_code') {
+        setActiveTab('issues');
       }
     } catch (e: any) {
       console.error('Failed to analyze code:', e);
@@ -299,6 +302,27 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
 
           {result && (
             <div className="space-y-4">
+              {/* Prominent Red Compiler / Syntax Error Banner */}
+              {(result.status === 'blocked' && (result.score === 0 || result.issues.some(i => i.rule_id.includes('SYNTAX') || i.rule_id.includes('COMPILER') || i.rule_id.includes('SEMANTICS')))) && (
+                <div className="p-5 rounded-3xl bg-rose-950/80 border-2 border-rose-500 text-rose-200 space-y-3 shadow-xl shadow-rose-950/50">
+                  <div className="flex items-center gap-2.5 text-rose-400 font-black text-sm">
+                    <span className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                      <Terminal size={18} />
+                    </span>
+                    <span className="text-base tracking-tight">🚫 Ошибка компиляции / синтаксиса</span>
+                  </div>
+                  <p className="text-xs text-rose-200 leading-relaxed font-medium">
+                    Код не прошёл базовую проверку компилятором или содержит грубые ошибки синтаксиса / семантики. Слияние в ветку и открытие PR заблокированы.
+                  </p>
+                  <div className="p-3.5 rounded-2xl bg-black/85 font-mono text-xs text-rose-400 border border-rose-500/40 overflow-x-auto whitespace-pre leading-relaxed">
+                    {result.issues
+                      .filter(i => i.rule_id.includes('SYNTAX') || i.rule_id.includes('COMPILER') || i.rule_id.includes('SEMANTICS') || result.score === 0)
+                      .map(i => `[COMPILER ERROR] Строка #${i.line_number || 1}: ${i.message}`)
+                      .join('\n') || '[COMPILER ERROR] Синтаксическая ошибка в кодовой базе'}
+                  </div>
+                </div>
+              )}
+
               {/* Score & Verdict Card */}
               <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">

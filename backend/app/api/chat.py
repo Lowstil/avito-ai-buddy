@@ -10,4 +10,4 @@ def handle_chat_message(
     payload: ChatRequest,
     user: UserProfile = Depends(get_current_user)
 ):
-    return agent_service.process_message(user, payload.message)
+    return agent_service.process_message(user, payload.message, history=payload.history)

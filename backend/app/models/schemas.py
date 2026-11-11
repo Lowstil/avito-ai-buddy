@@ -32,6 +32,11 @@ class ChecklistTask(BaseModel):
     completed_at: Optional[datetime] = None
     priority: Literal["low", "medium", "high"] = "medium"
     resource_link: Optional[str] = None
+    notes: Optional[str] = ""
+
+class ChecklistNotePayload(BaseModel):
+    notes: Optional[str] = None
+    note: Optional[str] = None
 
 class ChecklistSummary(BaseModel):
     total_tasks: int
@@ -96,6 +101,7 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = "default"
     user_id: Optional[str] = None
+    history: Optional[list[dict[str, Any]]] = None
 
 class ChatResponse(BaseModel):
     reply: str

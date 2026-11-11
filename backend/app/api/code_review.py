@@ -11,4 +11,4 @@ def analyze_code_snippet(
     user: UserProfile = Depends(get_current_user)
 ):
     """Analyze code snippet against Avito's 10 Golden Engineering & ZBP Rules."""
-    return code_review_service.analyze_code(req)
+    return code_review_service.analyze_code(req, user_id=user.user_id)

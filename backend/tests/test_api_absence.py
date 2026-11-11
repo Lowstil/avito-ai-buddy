@@ -54,3 +54,61 @@ def test_reject_absence(client, mentor_headers):
     reject_res = client.post(f"/api/absences/{req_id}/reject", headers=mentor_headers)
     assert reject_res.status_code == 200
     assert reject_res.json()["status"] == "rejected"
+
+def test_absence_limit_exceeded(client, intern_headers):
+    # Request 2 days in November (allowed)
+    r1 = client.post("/api/absences", json={
+        "start_date": "2026-11-05",
+        "end_date": "2026-11-06",
+        "absence_type": "day_off",
+        "reason": "Дела в вузе"
+    }, headers=intern_headers)
+    assert r1.status_code == 201
+
+    # Attempt 3rd day in November -> 400 Bad Request
+    r2 = client.post("/api/absences", json={
+        "start_date": "2026-11-07",
+        "end_date": "2026-11-07",
+        "absence_type": "day_off",
+        "reason": "Ещё один день"
+    }, headers=intern_headers)
+    assert r2.status_code == 400
+    assert "Превышен лимит" in r2.json()["detail"]
+
+def test_absence_invalid_date_format(client, intern_headers):
+    r = client.post("/api/absences", json={
+        "start_date": "not-a-date",
+        "end_date": "2026-11-20",
+        "reason": "Тест"
+    }, headers=intern_headers)
+    assert r.status_code == 400
+    assert "Неверный формат" in r.json()["detail"]
+
+def test_absence_start_after_end(client, intern_headers):
+    r = client.post("/api/absences", json={
+        "start_date": "2026-11-25",
+        "end_date": "2026-11-20",
+        "reason": "Тест"
+    }, headers=intern_headers)
+    assert r.status_code == 400
+    assert "не может быть позже" in r.json()["detail"]
+
+def test_absence_multi_month_limit(client, intern_headers):
+    # Request spanning across month boundaries (1 day in Nov, 1 day in Dec = 2 days total)
+    r1 = client.post("/api/absences", json={
+        "start_date": "2026-11-30",
+        "end_date": "2026-12-01",
+        "absence_type": "day_off",
+        "reason": "Переход месяца"
+    }, headers=intern_headers)
+    assert r1.status_code == 201
+
+    # Now request 2 more days in December (1 day already used in Dec + 2 = 3 > 2) -> 400
+    r2 = client.post("/api/absences", json={
+        "start_date": "2026-12-05",
+        "end_date": "2026-12-06",
+        "absence_type": "day_off",
+        "reason": "Еще отгул в декабре"
+    }, headers=intern_headers)
+    assert r2.status_code == 400
+    assert "Превышен лимит" in r2.json()["detail"]

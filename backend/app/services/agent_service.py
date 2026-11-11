@@ -1,7 +1,69 @@
 import re
-from typing import Any
+from typing import Any, Optional
 from app.models.schemas import ChatResponse, UserProfile, UserRole
 from app.mcp.tools import mcp_tool_registry
+from app.services.gemini_service import gemini_service
+
+def extract_date_and_reason(text: str) -> tuple[Optional[str], str]:
+    """Extract and normalize date (YYYY-MM-DD) and reason from user message."""
+    # 1. Match YYYY-MM-DD
+    iso_match = re.search(r"\b(202\d-\d{2}-\d{2})\b", text)
+    if iso_match:
+        date_str = iso_match.group(1)
+        reason = text[:iso_match.start()] + " " + text[iso_match.end():]
+    else:
+        # 2. Match DD.MM.YYYY
+        dot_match = re.search(r"\b(\d{1,2})\.(\d{1,2})\.(202\d)\b", text)
+        if dot_match:
+            d, m, y = dot_match.groups()
+            date_str = f"{y}-{int(m):02d}-{int(d):02d}"
+            reason = text[:dot_match.start()] + " " + text[dot_match.end():]
+        else:
+            # 3. Match DD.MM
+            dot_short = re.search(r"\b(\d{1,2})\.(\d{1,2})\b", text)
+            if dot_short:
+                d, m = dot_short.groups()
+                date_str = f"2026-{int(m):02d}-{int(d):02d}"
+                reason = text[:dot_short.start()] + " " + text[dot_short.end():]
+            else:
+                # 4. Match Russian month names
+                months = {
+                    "январ": "01", "феврал": "02", "март": "03", "апрел": "04",
+                    "ма": "05", "июн": "06", "июл": "07", "август": "08",
+                    "сентябр": "09", "октябр": "10", "ноябр": "11", "декабр": "12"
+                }
+                ru_match = re.search(r"\b(\d{1,2})\s+([а-яА-ЯёЁ]+)(?:\s+(202\d))?\b", text, re.IGNORECASE)
+                if ru_match:
+                    d, m_name, y = ru_match.groups()
+                    m_code = None
+                    for prefix, code in months.items():
+                        if m_name.lower().startswith(prefix):
+                            m_code = code
+                            break
+                    if m_code:
+                        year = y if y else "2026"
+                        date_str = f"{year}-{m_code}-{int(d):02d}"
+                        reason = text[:ru_match.start()] + " " + text[ru_match.end():]
+                    else:
+                        date_str = None
+                        reason = text
+                else:
+                    date_str = None
+                    reason = text
+
+    # Clean up reason string
+    if reason:
+        cleaned = re.sub(
+            r"(?i)\b(хочу|взять|оформить|запросить|отгул|day-off|day off|дей-офф|дейофф|выходной|на дату|на|по причине|причина)\b",
+            "",
+            reason
+        )
+        cleaned = cleaned.strip(", :;.- \t\n")
+        reason_val = cleaned if len(cleaned) >= 3 else "По личным обстоятельствам"
+    else:
+        reason_val = "По личным обстоятельствам"
+
+    return date_str, reason_val
 
 class AgentService:
     """Intelligent Role-Aware Assistant (AI-buddy) for Avito: Intern, Mentor, and Team Lead."""
@@ -10,7 +72,7 @@ class AgentService:
         # Conversation state per user: e.g. for multi-turn slot filling
         self._states: dict[str, dict[str, Any]] = {}
 
-    def process_message(self, user: UserProfile, message: str) -> ChatResponse:
+    def process_message(self, user: UserProfile, message: str, history: Optional[list[dict[str, Any]]] = None) -> ChatResponse:
         user_id = user.user_id
         text = message.strip()
         lower_text = text.lower()
@@ -135,7 +197,22 @@ class AgentService:
                     sources=["Чек-лист стажёра Авито", "Сервис адаптации Avito Start"]
                 )
 
-            # F. Default Welcome for Mentor
+            # F. Gemini 2.5 Flash for Mentor (if question is open-ended and key is available)
+            if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "добрый", "hi", "hello"]):
+                ai_reply = gemini_service.generate_chat_reply(
+                    user_role="mentor",
+                    user_name=user.name,
+                    message=text,
+                    history=history
+                )
+                if ai_reply:
+                    return ChatResponse(
+                        reply=ai_reply,
+                        suggested_chips=["План встречи 1:1 для ментора", "Чек-лист код-ревью для джуна", "Оценка к Экватору (3 мес)"],
+                        sources=["Google Gemini 2.5 Flash", "Avito Mentorship Playbook"]
+                    )
+
+            # G. Default Welcome for Mentor
             return ChatResponse(
                 reply=(
                     f"Привет, {user.name.split()[0]}! Я твой цифровой ассистент по менторингу стажёра **Арсения Новикова** 👨‍💻\n\n"
@@ -221,7 +298,22 @@ class AgentService:
                     sources=["Sprint 24.1 Delivery Backlog Planning"]
                 )
 
-            # E. Default Welcome for Team Lead
+            # E. Gemini 2.5 Flash for Team Lead (if question is open-ended and key is available)
+            if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "добрый", "hi", "hello"]):
+                ai_reply = gemini_service.generate_chat_reply(
+                    user_role="lead",
+                    user_name=user.name,
+                    message=text,
+                    history=history
+                )
+                if ai_reply:
+                    return ChatResponse(
+                        reply=ai_reply,
+                        suggested_chips=["Метрики онбординга команды", "Готовность стажёра к офферу", "Нагрузка наставника Алексея"],
+                        sources=["Google Gemini 2.5 Flash", "Avito Engineering Management Hub"]
+                    )
+
+            # F. Default Welcome for Team Lead
             return ChatResponse(
                 reply=(
                     f"Здравствуйте, {user.name.split()[0]}! Я аналитический ассистент по онбордингу и эффективности инженерной команды **Order Management & Delivery Core** 👩‍💼\n\n"
@@ -345,31 +437,38 @@ class AgentService:
 
         # Multi-turn Slot Filling: Day-off booking
         if state.get("step") == "awaiting_absence_details":
-            has_date_or_reason = bool(re.search(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[а-яА-Я]+|\d{1,2}\.\d{1,2})", text)) or any(kw in lower_text for kw in ["врач", "сессия", "экзамен", "дела", "заболел", "отгул", "выходной", "личное", "универ"])
+            extracted_date, extracted_reason = extract_date_and_reason(text)
+            has_date_or_reason = (extracted_date is not None) or any(kw in lower_text for kw in ["врач", "сессия", "экзамен", "дела", "заболел", "отгул", "выходной", "личное", "универ"])
             
             if not has_date_or_reason:
                 self._states[user_id] = {}  # User changed topic, cancel flow!
             else:
-                date_match = re.search(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[а-яА-Я]+|\d{1,2}\.\d{1,2})", text)
-                date_val = date_match.group(1) if date_match else "2026-11-20"
-                reason_val = text if len(text) > 5 else "По личным обстоятельствам"
+                date_val = extracted_date or "2026-11-20"
+                reason_val = extracted_reason if len(extracted_reason) > 3 else "По личным обстоятельствам"
                 
                 result = mcp_tool_registry.execute(
                     "request_absence",
                     user_id=user.user_id,
                     user_name=user.name,
-                    start_date="2026-11-20",
+                    start_date=date_val,
                     reason=reason_val,
                     absence_type="day_off"
                 )
                 self._states[user_id] = {}  # Clear state
+                if "error" in result:
+                    return ChatResponse(
+                        reply=f"❌ **Не удалось оформить отгул:**\n\n{result['error']}\n\nПо регламенту стажировки Авито доступно не более 2 дней в календарный месяц.",
+                        suggested_chips=["Проверить статус отгулов", "Мой чек-лист", "Нужны доступы"],
+                        sources=["Регламент отпусков и отсутствий Авито"]
+                    )
+
                 req = result.get("request", {})
                 return ChatResponse(
                     reply=(
                         f"🎉 **Заявка на отгул успешно сформирована и зарегистрирована!**\n\n"
                         f"• **Номер заявки:** #{req.get('id', 'ABS-2026-NEW')}\n"
                         f"• **Сотрудник:** {user.name} ({user.track} стажёр)\n"
-                        f"• **Дата:** {req.get('start_date', '2026-11-20')}\n"
+                        f"• **Дата:** {req.get('start_date', date_val)}\n"
                         f"• **Причина:** {req.get('reason', reason_val)}\n"
                         f"• **Статус:** ⏳ *На согласовании у наставника ({user.mentor_name or 'Алексея Смирнова'})*\n\n"
                         f"Заявка уже появилась в разделе «Отгулы (Day-off)» с подсветкой дня в календаре."
@@ -396,15 +495,51 @@ class AgentService:
                 suggested_chips=["Оформить новый отгул", "Мой чек-лист", "Нужны доступы"]
             )
 
-        # C. Absence Trigger (Start new absence request)
-        if any(kw in lower_text for kw in ["отгул", "day off", "дей-офф", "дейофф", "взять выходной", "отлучиться"]):
+        # C. Absence Trigger (Start new absence request or 1-step booking)
+        if any(kw in lower_text for kw in ["отгул", "day off", "day-off", "дей-офф", "дей офф", "дейофф", "выходной", "отлучиться"]):
+            # Check for 1-step absence booking (date provided in this prompt)
+            extracted_date, extracted_reason = extract_date_and_reason(text)
+            if extracted_date:
+                result = mcp_tool_registry.execute(
+                    "request_absence",
+                    user_id=user.user_id,
+                    user_name=user.name,
+                    start_date=extracted_date,
+                    reason=extracted_reason,
+                    absence_type="day_off"
+                )
+                self._states[user_id] = {}
+                if "error" in result:
+                    return ChatResponse(
+                        reply=f"❌ **Не удалось оформить отгул:**\n\n{result['error']}\n\nПо регламенту стажировки Авито доступно не более 2 дней в календарный месяц.",
+                        suggested_chips=["Проверить статус отгулов", "Мой чек-лист", "Нужны доступы"],
+                        sources=["Регламент отпусков и отсутствий Авито"]
+                    )
+
+                req = result.get("request", {})
+                return ChatResponse(
+                    reply=(
+                        f"🎉 **Заявка на отгул успешно сформирована и зарегистрирована!**\n\n"
+                        f"• **Номер заявки:** #{req.get('id', 'ABS-2026-NEW')}\n"
+                        f"• **Сотрудник:** {user.name} ({user.track} стажёр)\n"
+                        f"• **Дата:** {req.get('start_date', extracted_date)}\n"
+                        f"• **Причина:** {req.get('reason', extracted_reason)}\n"
+                        f"• **Статус:** ⏳ *На согласовании у наставника ({user.mentor_name or 'Алексея Смирнова'})*\n\n"
+                        f"Заявка уже появилась в разделе «Отгулы (Day-off)» с подсветкой дня в календаре."
+                    ),
+                    action_type="absence_created",
+                    action_payload=req,
+                    suggested_chips=["Проверить статус отгулов", "Что сделать на этой неделе?", "Стандарты Code Review"],
+                    sources=["Корпоративный сервис 'Отсутствия' Авито"]
+                )
+
             self._states[user_id] = {"step": "awaiting_absence_details"}
             return ChatResponse(
                 reply=(
                     f"Привет, {user.name.split()[0]}! Без проблем, я помогу оформить отгул (day-off).\n\n"
                     f"📋 **Условия для стажёра:**\n"
                     f"• Доступный баланс: **2 дня** в текущем месяце.\n"
-                    f"• Заявка согласуется с твоим наставником ({user.mentor_name or 'Алексеем Смирновым'}).\n\n"
+                    f"• Заявка согласуется с твоим наставником ({user.mentor_name or 'Алексея Смирнова'}).\n\n"
                     f"На какую дату планируешь отсутствие и какую причину указать (например: *20 ноября, визит к врачу* или *учебные дела*)?"
                 ),
                 action_type="absence_flow_started",
@@ -515,8 +650,28 @@ class AgentService:
                 sources=["Avito PaaS Documentation", "Avito Architecture Standards"]
             )
 
-        # I. Playbook RAG
+        # I. Playbook RAG & Gemini Synthesis
         rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
+        context_info = ""
+        if rag_res:
+            context_info = "\n\n".join([f"Статья: {a['title']}\n{a['content']}" for a in rag_res[:2]])
+
+        # J. Gemini 2.5 Flash Real AI Chat (if GEMINI_API_KEY / GOOGLE_API_KEY provided)
+        if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "hi", "hello"]):
+            ai_reply = gemini_service.generate_chat_reply(
+                user_role=user.role,
+                user_name=user.name,
+                message=text,
+                context_info=context_info,
+                history=history
+            )
+            if ai_reply:
+                return ChatResponse(
+                    reply=ai_reply,
+                    suggested_chips=["Как оформить отгул?", "Мой чек-лист", "Стандарты Code Review"],
+                    sources=["Google Gemini 2.5 Flash", "Avito Knowledge Hub"]
+                )
+
         if rag_res:
             top_article = rag_res[0]
             return ChatResponse(
@@ -529,7 +684,7 @@ class AgentService:
                 sources=[f"AvitoTech Playbook: {top_article['title']}"]
             )
 
-        # J. Default Intern Welcome
+        # K. Default Intern Welcome
         return ChatResponse(
             reply=(
                 f"Привет, {user.name.split()[0]}! Я твой цифровой наставник **AI-buddy в Авито** 🚀\n\n"

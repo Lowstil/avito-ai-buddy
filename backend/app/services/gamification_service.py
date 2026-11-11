@@ -5,6 +5,7 @@ class GamificationService:
     """Gamification, Badges and XP Engine for Avito Start Interns."""
 
     def __init__(self):
+        self.reset()
         self._user_badges = [
             AchievementBadge(
                 id="badge_zbp_champion",
@@ -94,9 +95,26 @@ class GamificationService:
             )
         ]
 
+    def reset(self):
+        self._user_extra_xp: dict[str, int] = {}
+        self._user_xp_history: dict[str, list[dict]] = {}
+
+    def award_xp(self, user_id: str, amount: int, reason: str = "") -> UserGamificationProfile:
+        if user_id not in self._user_extra_xp:
+            self._user_extra_xp[user_id] = 0
+            self._user_xp_history[user_id] = []
+        self._user_extra_xp[user_id] += amount
+        self._user_xp_history[user_id].append({
+            "amount": amount,
+            "reason": reason,
+            "timestamp": datetime.now()
+        })
+        return self.get_user_profile(user_id)
+
     def get_user_profile(self, user_id: str) -> UserGamificationProfile:
         unlocked = [b for b in self._user_badges if b.unlocked]
-        total_xp = sum(b.xp for b in unlocked)
+        extra_xp = self._user_extra_xp.get(user_id, 0)
+        total_xp = sum(b.xp for b in unlocked) + extra_xp
         
         # Level thresholds
         # Level 1: 0 - 250 XP (Новичок)

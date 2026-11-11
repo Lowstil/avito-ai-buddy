@@ -681,6 +681,7 @@ export const App: React.FC = () => {
           <ChecklistView
             tasks={tasks}
             summary={summary}
+            activeUserId={activeUserId}
             onToggleTask={handleToggleTask}
             onAskBuddyAboutTask={handleAskBuddyAboutTask}
           />

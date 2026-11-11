@@ -180,3 +180,75 @@ def test_chat_cancel_absence_on_technical_question(client, intern_headers):
     assert data.get("action_type") != "absence_created"
     assert "LIMIT" in data["reply"]
 
+def test_chat_absence_1_step_booking(client, intern_headers):
+    # 1-step booking: user provides both intent and date in the same message
+    res = client.post(
+        "/api/chat",
+        json={"message": "Хочу взять отгул 2026-11-25 на экзамен"},
+        headers=intern_headers
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["action_type"] == "absence_created"
+    assert "успешно сформирована" in data["reply"].lower()
+    assert "2026-11-25" in data["reply"]
+    assert "экзамен" in data["reply"].lower()
+
+def test_chat_with_history(client, intern_headers):
+    payload = {
+        "message": "Что такое Zero Bug Policy?",
+        "history": [
+            {"sender": "user", "content": "Привет!"},
+            {"sender": "assistant", "content": "Привет! Я твой AI-buddy."}
+        ]
+    }
+    res = client.post("/api/chat", json=payload, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert "Zero Bug Policy" in data["reply"]
+
+def test_chat_absence_with_vykhodnoy(client, intern_headers):
+    # 1-step booking using word "выходной"
+    res = client.post(
+        "/api/chat",
+        json={"message": "Мне нужен выходной 2026-11-26 по учебе"},
+        headers=intern_headers
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["action_type"] == "absence_created"
+    assert "2026-11-26" in data["reply"]
+
+def test_chat_gemini_integration_mentor_and_lead(client, mentor_headers, lead_headers):
+    from unittest.mock import MagicMock
+    from app.services.gemini_service import gemini_service
+
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.text = "Ответ от модели Gemini 2.5 Flash для наставника"
+    mock_client.models.generate_content.return_value = mock_resp
+
+    original_client = gemini_service._client
+    gemini_service._client = mock_client
+    try:
+        # Mentor custom question
+        res_mentor = client.post(
+            "/api/chat",
+            json={"message": "Как провести встречу со стажером?"},
+            headers=mentor_headers
+        )
+        assert res_mentor.status_code == 200
+        assert "Gemini" in res_mentor.json()["reply"]
+
+        # Lead custom question
+        mock_resp.text = "Ответ от модели Gemini 2.5 Flash для тимлида"
+        res_lead = client.post(
+            "/api/chat",
+            json={"message": "Как оптимизировать процесс онбординга?"},
+            headers=lead_headers
+        )
+        assert res_lead.status_code == 200
+        assert "Gemini" in res_lead.json()["reply"]
+    finally:
+        gemini_service._client = original_client
+
