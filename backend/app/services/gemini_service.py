@@ -11,6 +11,13 @@ try:
 except ImportError:
     HAS_GENAI = False
 
+    class _FallbackTypes:
+        @staticmethod
+        def GenerateContentConfig(**kwargs):
+            return kwargs
+
+    types = _FallbackTypes()
+
 class GeminiService:
     """Real AI Integration with Google Gemini (gemini-2.5-flash via google-genai SDK 2.34.0).
     Provides deep code refactoring, review, and role-specific conversational intelligence.
