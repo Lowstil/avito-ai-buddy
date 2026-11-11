@@ -16,23 +16,27 @@ import {
   CheckCircle2,
   Lock,
   Flame,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface AchievementsViewProps {
   userId?: string;
   onAskAI?: (prompt: string) => void;
+  onShowToast?: (msg: string, type: 'success' | 'xp' | 'info' | 'warning') => void;
 }
 
 export const AchievementsView: React.FC<AchievementsViewProps> = ({
   userId = 'intern_1',
   onAskAI,
+  onShowToast,
 }) => {
   const [profile, setProfile] = useState<UserGamificationProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [celebrate, setCelebrate] = useState<boolean>(false);
+  const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,6 +61,9 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
       spread: 70,
       origin: { y: 0.6 }
     });
+    if (onShowToast) {
+      onShowToast('Поздравляем с отличным прогрессом онбординга! 🎉', 'xp');
+    }
     setTimeout(() => setCelebrate(false), 2500);
   };
 
@@ -213,6 +220,52 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
         </div>
       </div>
 
+      {/* Career Roadmap: 5 Levels from Intern to Junior Backend Offer */}
+      <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <Trophy size={14} className="text-[#04E061]" />
+            Карьерный трек: Avito Start Backend Trajectory
+          </h3>
+          <span className="text-[11px] font-semibold text-slate-400">
+            Текущий: <strong className="text-[#04E061]">Уровень {profile?.level || 1} ({profile?.level_name})</strong>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 pt-1">
+          {[
+            { lvl: 1, xp: 0, title: 'Новобранец', sub: 'Вход в команду', reached: (profile?.level || 1) >= 1 },
+            { lvl: 2, xp: 300, title: 'Быстрый старт', sub: 'Первый PR в прод', reached: (profile?.level || 1) >= 2 },
+            { lvl: 3, xp: 600, title: 'Уверенный джун', sub: 'Автономия в спринте', reached: (profile?.level || 1) >= 3 },
+            { lvl: 4, xp: 1200, title: 'Гроза прод-багов', sub: 'Защита ZBP & экватор', reached: (profile?.level || 1) >= 4 },
+            { lvl: 5, xp: 2000, title: 'Оффер в штат', sub: 'Junior Backend Avito', reached: (profile?.level || 1) >= 5 },
+          ].map((step) => (
+            <div
+              key={step.lvl}
+              className={`p-3 rounded-2xl border text-center transition-all ${
+                step.reached
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-white shadow-sm'
+                  : 'bg-white/5 border-white/5 text-slate-500'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1 text-[11px] font-black mb-0.5">
+                <span className={step.reached ? 'text-[#04E061]' : 'text-slate-500'}>
+                  Ур. {step.lvl}
+                </span>
+                <span className="text-slate-500">•</span>
+                <span className="text-slate-400 font-normal">{step.xp} XP</span>
+              </div>
+              <p className={`text-xs font-bold leading-tight ${step.reached ? 'text-white' : 'text-slate-400'}`}>
+                {step.title}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                {step.sub}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-white tracking-tight">
@@ -271,10 +324,11 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
             return (
               <div
                 key={badge.id}
-                className={`relative flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 hover:-translate-y-1 ${
+                onClick={() => setSelectedBadge(badge)}
+                className={`relative flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 hover:-translate-y-1 cursor-pointer ${
                   isUnlocked
-                    ? 'glass-panel border-emerald-500/30 bg-emerald-500/5 shadow-lg shadow-emerald-950/20'
-                    : 'glass-panel border-white/5 opacity-60 hover:opacity-80'
+                    ? 'glass-panel border-emerald-500/30 bg-emerald-500/5 shadow-lg shadow-emerald-950/20 hover:border-emerald-500/60'
+                    : 'glass-panel border-white/5 opacity-60 hover:opacity-100 hover:border-white/20'
                 }`}
               >
                 <div>
@@ -365,6 +419,78 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
           >
             Спросить AI-buddy
           </button>
+        </div>
+      )}
+
+      {/* Selected Badge Detail Modal */}
+      {selectedBadge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-lg rounded-3xl glass-panel p-6 border border-white/20 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
+                  {renderBadgeIcon(selectedBadge.icon)}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#00AAFF]">
+                    {selectedBadge.category}
+                  </span>
+                  <h3 className="text-base font-black text-white">
+                    {selectedBadge.title}
+                  </h3>
+                  <span className="text-xs font-extrabold text-[#04E061]">
+                    +{selectedBadge.xp} XP
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedBadge(null)}
+                className="p-1 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/5 text-xs text-slate-200 leading-relaxed space-y-2">
+              <p className="font-semibold text-white">{selectedBadge.description}</p>
+              <div className="pt-2 border-t border-white/5 text-[11px] text-slate-400 space-y-1">
+                <p>
+                  <strong>Статус:</strong>{' '}
+                  {selectedBadge.unlocked ? (
+                    <span className="text-[#04E061] font-bold">✓ Получено ({formatBadgeDate(selectedBadge.unlocked_at)})</span>
+                  ) : (
+                    <span className="text-amber-400 font-bold">В процессе выполнения ({selectedBadge.progress}%)</span>
+                  )}
+                </p>
+                <p>
+                  <strong>Ценность для AvitoTech:</strong> Закрепление стандартов надёжности, снижение Time-to-First-PR и самостоятельность в фичах сервиса.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              {onAskAI && (
+                <button
+                  onClick={() => {
+                    onAskAI(`Как быстрее получить бейдж «${selectedBadge.title}» в Авито и что для этого нужно сделать?`);
+                    setSelectedBadge(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#00AAFF]/20 border border-[#00AAFF]/40 text-[#00AAFF] hover:text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles size={13} />
+                  <span>Спросить совет у AI</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setSelectedBadge(null)}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer ml-auto"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

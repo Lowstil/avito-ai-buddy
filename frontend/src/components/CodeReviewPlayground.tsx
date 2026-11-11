@@ -21,7 +21,44 @@ interface CodeReviewPlaygroundProps {
   activeUserId?: string;
   onAskBuddy?: (question: string) => void;
   onAskAI?: (question: string) => void;
+  onShowToast?: (msg: string, type: 'success' | 'xp' | 'info' | 'warning') => void;
 }
+
+const SAMPLE_BAD_PY = `# ❌ Нарушения стандартов надежности Python в Авито
+import requests
+
+def fetch_delivery_batch(user_id):
+    # ❌ BUG 1: HTTP-запрос без таймаута блокирует поток в проде
+    resp = requests.get(f"http://delivery-api.internal/batch?user={user_id}")
+    
+    # ❌ BUG 2: Опасный bare except скрывает критические системные сбои
+    try:
+        data = resp.json()
+        return data["items"]
+    except:
+        return []
+`;
+
+const SAMPLE_CLEAN_PY = `"""Модуль доставки заказов по стандартам надежности AvitoTech"""
+import logging
+import requests
+
+logger = logging.getLogger(__name__)
+
+def fetch_delivery_batch(user_id: int) -> list:
+    """Безопасный запрос с явным таймаутом сокета и типизированной обработкой"""
+    try:
+        # ✅ Обязательный таймаут (connect: 1s, read: 3s)
+        resp = requests.get(
+            f"http://delivery-api.internal/batch?user={user_id}",
+            timeout=(1.0, 3.0)
+        )
+        resp.raise_for_status()
+        return resp.json().get("items", [])
+    except (requests.RequestException, ValueError) as err:
+        logger.error("Ошибка при получении пачки доставки для user %s: %s", user_id, err)
+        return []
+`;
 
 const SAMPLE_BAD_GO = `package delivery
 
@@ -120,6 +157,7 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
   activeUserId = 'intern_1',
   onAskBuddy,
   onAskAI,
+  onShowToast,
 }) => {
   const askFn = onAskAI || onAskBuddy;
   const [code, setCode] = useState<string>(SAMPLE_BAD_GO);
@@ -184,26 +222,62 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] text-slate-400 font-semibold mr-1">Пресеты:</span>
             <button
               onClick={() => {
                 setCode(SAMPLE_BAD_GO);
                 setLanguage('go');
                 setResult(null);
+                if (onShowToast) onShowToast('Загружен демо-код на Go с ошибками ZBP', 'info');
               }}
-              className="px-3 py-1.5 rounded-xl glass-card text-xs text-rose-300 border border-rose-500/30 hover:border-rose-500/60 transition-all cursor-pointer font-medium"
+              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-rose-300 border border-rose-500/30 hover:border-rose-500/60 transition-all cursor-pointer font-medium"
             >
-              Код с ошибками (Демо)
+              Go: Ошибки ZBP
             </button>
             <button
               onClick={() => {
                 setCode(SAMPLE_CLEAN_GO);
                 setLanguage('go');
                 setResult(null);
+                if (onShowToast) onShowToast('Загружен чистый эталонный код на Go', 'success');
               }}
-              className="px-3 py-1.5 rounded-xl glass-card text-xs text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 transition-all cursor-pointer font-medium"
+              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 transition-all cursor-pointer font-medium"
             >
-              Идеальный код по ZBP
+              Go: Чистый ZBP
+            </button>
+            <button
+              onClick={() => {
+                setCode('ddd');
+                setLanguage('python');
+                setResult(null);
+                if (onShowToast) onShowToast('Загружен некорректный фрагмент "ddd" (тест блокировки)', 'warning');
+              }}
+              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-all cursor-pointer font-medium"
+            >
+              Python: Невалидный "ddd"
+            </button>
+            <button
+              onClick={() => {
+                setCode(SAMPLE_BAD_PY);
+                setLanguage('python');
+                setResult(null);
+                if (onShowToast) onShowToast('Загружен код на Python с нарушениями таймаутов', 'info');
+              }}
+              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-purple-300 border border-purple-500/30 hover:border-purple-500/60 transition-all cursor-pointer font-medium"
+            >
+              Python: Без таймаута
+            </button>
+            <button
+              onClick={() => {
+                setCode(SAMPLE_CLEAN_PY);
+                setLanguage('python');
+                setResult(null);
+                if (onShowToast) onShowToast('Загружен чистый код на Python по стандартам Авито', 'success');
+              }}
+              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-teal-300 border border-teal-500/30 hover:border-teal-500/60 transition-all cursor-pointer font-medium"
+            >
+              Python: Чистый ZBP
             </button>
           </div>
         </div>
@@ -240,13 +314,21 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
               </div>
             </div>
 
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Вставьте код микросервиса для анализа на соответствие стандартам Авито..."
-              className="w-full h-[480px] bg-black/50 border border-white/10 rounded-2xl p-4 font-mono text-xs text-slate-200 outline-none focus:border-[#04E061] transition-all resize-none leading-relaxed"
-              spellCheck={false}
-            />
+            {/* IDE Line Numbers Gutter + Editor */}
+            <div className="relative flex rounded-2xl bg-black/60 border border-white/10 overflow-hidden focus-within:border-[#04E061] transition-all">
+              <div className="py-4 pl-3 pr-2.5 bg-black/40 border-r border-white/5 select-none text-right font-mono text-xs text-slate-600 leading-relaxed shrink-0">
+                {code.split('\n').map((_, i) => (
+                  <div key={i}>{i + 1}</div>
+                ))}
+              </div>
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Вставьте код микросервиса для анализа на соответствие стандартам Авито..."
+                className="w-full h-[480px] bg-transparent p-4 font-mono text-xs text-slate-200 outline-none resize-none leading-relaxed"
+                spellCheck={false}
+              />
+            </div>
 
             <div className="flex items-center justify-between pt-1">
               <p className="text-[11px] text-slate-400">
@@ -509,22 +591,43 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => handleCopyFullRefactored(result.full_refactored_code!)}
-                      className="px-3 py-1.5 rounded-xl font-bold text-xs bg-[#04E061] text-slate-950 hover:brightness-110 flex items-center gap-1.5 cursor-pointer shadow-md"
-                    >
-                      {copiedFullCode ? (
-                        <>
-                          <Check size={14} />
-                          <span>Скопировано в буфер!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} />
-                          <span>Скопировать весь код</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (result.full_refactored_code) {
+                            setCode(result.full_refactored_code);
+                            setActiveTab('issues');
+                            if (onShowToast) {
+                              onShowToast('Отрефакторенный код перенесён в редактор! Нажмите «Запустить AI-Анализ» для повторной проверки.', 'success');
+                            }
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+                      >
+                        <Check size={14} className="text-[#04E061]" />
+                        <span>Вставить в редактор</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          handleCopyFullRefactored(result.full_refactored_code!);
+                          if (onShowToast) onShowToast('Полный отрефакторенный код скопирован в буфер обмена', 'info');
+                        }}
+                        className="px-3 py-1.5 rounded-xl font-bold text-xs bg-[#04E061] text-slate-950 hover:brightness-110 flex items-center gap-1.5 cursor-pointer shadow-md"
+                      >
+                        {copiedFullCode ? (
+                          <>
+                            <Check size={14} />
+                            <span>Скопировано!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            <span>Скопировать</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <pre className="p-4 rounded-2xl bg-black/70 border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto max-h-[460px] leading-relaxed">

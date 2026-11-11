@@ -18,6 +18,8 @@ import { AccessView } from './components/AccessView';
 import { CodeReviewPlayground } from './components/CodeReviewPlayground';
 import { AchievementsView } from './components/AchievementsView';
 import { Footer } from './components/Footer';
+import { CommandPalette } from './components/CommandPalette';
+import { ToastHub, type ToastMessage } from './components/ToastHub';
 import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight, UserCheck, TrendingUp } from 'lucide-react';
 
 const getInitialWelcomeMessage = (user: UserProfile): ChatMessage => {
@@ -103,6 +105,42 @@ export const App: React.FC = () => {
   // Per-user chat histories
   const [messagesByUser, setMessagesByUser] = useState<Record<string, ChatMessage[]>>({});
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = (message: string, type: 'success' | 'xp' | 'info' | 'warning' = 'success', title?: string) => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    setToasts((prev) => [...prev, { id, message, type, title }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3800);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleClearChat = () => {
+    if (currentUser) {
+      setMessagesByUser((prev) => ({
+        ...prev,
+        [activeUserId]: [getInitialWelcomeMessage(currentUser)]
+      }));
+      showToast('Диалог очищен, начата новая сессия', 'info');
+    }
+  };
 
   const normalizeUserAvatar = (user: UserProfile): UserProfile => ({
     ...user,
@@ -164,6 +202,10 @@ export const App: React.FC = () => {
 
   const handleSwitchUser = (newUserId: string) => {
     setActiveUserId(newUserId);
+    const targetUser = users.find((u) => u.user_id === newUserId);
+    if (targetUser) {
+      showToast(`Переключено на роль: ${targetUser.name}`, 'info', 'Смена роли (RBAC)');
+    }
   };
 
   const handleToggleTask = async (taskId: string, currentStatus: string) => {
@@ -331,6 +373,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onSwitchUser={handleSwitchUser}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         gamification={gamification}
       />
 
@@ -670,6 +713,8 @@ export const App: React.FC = () => {
                 isLoading={isChatLoading}
                 onSendMessage={handleSendMessage}
                 onNavigateToTab={setActiveTab}
+                onClearChat={handleClearChat}
+                onShowToast={showToast}
               />
             </div>
 
@@ -684,6 +729,7 @@ export const App: React.FC = () => {
             activeUserId={activeUserId}
             onToggleTask={handleToggleTask}
             onAskBuddyAboutTask={handleAskBuddyAboutTask}
+            onShowToast={showToast}
           />
         )}
 
@@ -713,10 +759,12 @@ export const App: React.FC = () => {
         {/* TAB 5: Pre-flight Code Review Playground */}
         {activeTab === 'code-review' && (
           <CodeReviewPlayground
+            activeUserId={activeUserId}
             onAskAI={(codePrompt: string) => {
               setActiveTab('chat');
               handleSendMessage(codePrompt);
             }}
+            onShowToast={showToast}
           />
         )}
 
@@ -728,6 +776,7 @@ export const App: React.FC = () => {
               setActiveTab('chat');
               handleSendMessage(badgePrompt);
             }}
+            onShowToast={showToast}
           />
         )}
 
@@ -735,6 +784,22 @@ export const App: React.FC = () => {
 
       {/* Glassy Liquid Footer */}
       <Footer />
+
+      {/* Floating Toast Notification Hub */}
+      <ToastHub toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Global Command Palette (Ctrl+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectTab={setActiveTab}
+        onSwitchUser={handleSwitchUser}
+        onAskAI={(q) => {
+          setActiveTab('chat');
+          handleSendMessage(q);
+        }}
+        users={users}
+      />
 
     </div>
   );

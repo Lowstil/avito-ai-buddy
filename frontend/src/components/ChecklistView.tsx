@@ -11,6 +11,7 @@ interface ChecklistViewProps {
   activeUserId?: string;
   onToggleTask: (taskId: string, currentStatus: string) => void;
   onAskBuddyAboutTask: (taskTitle: string) => void;
+  onShowToast?: (msg: string, type: 'success' | 'xp' | 'info' | 'warning') => void;
 }
 
 export const ChecklistView: React.FC<ChecklistViewProps> = ({
@@ -18,11 +19,13 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
   summary,
   activeUserId,
   onToggleTask,
-  onAskBuddyAboutTask
+  onAskBuddyAboutTask,
+  onShowToast,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activeModalTask, setActiveModalTask] = useState<ChecklistTask | null>(null);
+  const [isSavedMap, setIsSavedMap] = useState<Record<string, boolean>>({});
   const [taskNotes, setTaskNotes] = useState<Record<string, string>>({
     'task_be_4': 'Обсудил с наставником Алексеем, настроили алерты в Sentry для сервиса доставки.'
   });
@@ -40,8 +43,18 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
   const handleSaveNote = async (taskId: string, notes: string) => {
     try {
       await api.updateTaskNote(activeUserId || 'intern_1', taskId, notes);
+      setIsSavedMap((prev) => ({ ...prev, [taskId]: true }));
+      if (onShowToast) {
+        onShowToast('Заметка успешно сохранена на сервере', 'success');
+      }
+      setTimeout(() => {
+        setIsSavedMap((prev) => ({ ...prev, [taskId]: false }));
+      }, 3000);
     } catch (e) {
       console.error('Failed to save task note:', e);
+      if (onShowToast) {
+        onShowToast('Не удалось сохранить заметку', 'warning');
+      }
     }
   };
 
@@ -69,6 +82,9 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
         origin: { y: 0.8 },
         colors: ['#04E061', '#00AAFF', '#965EEB']
       });
+      if (onShowToast) {
+        onShowToast(`Задача "${task.title.slice(0, 30)}..." выполнена! +50 XP`, 'xp');
+      }
     }
     onToggleTask(task.id, task.status);
   };
@@ -312,10 +328,18 @@ export const ChecklistView: React.FC<ChecklistViewProps> = ({
 
             {/* Personal Notes (User editable) */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Edit3 size={14} className="text-[#965EEB]" />
-                Мои личные заметки по задаче:
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Edit3 size={14} className="text-[#965EEB]" />
+                  Мои личные заметки по задаче:
+                </h4>
+                {isSavedMap[activeModalTask.id] && (
+                  <span className="text-[11px] font-bold text-[#04E061] flex items-center gap-1 animate-fade-in">
+                    <Check size={12} />
+                    Сохранено на сервере
+                  </span>
+                )}
+              </div>
               <textarea
                 value={taskNotes[activeModalTask.id] || ''}
                 onChange={(e) => setTaskNotes({ ...taskNotes, [activeModalTask.id]: e.target.value })}

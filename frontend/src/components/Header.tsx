@@ -10,6 +10,7 @@ import {
   Code2,
   Trophy,
   Flame,
+  Search,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -18,6 +19,7 @@ interface HeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onSwitchUser: (userId: string) => void;
+  onOpenCommandPalette?: () => void;
   gamification?: {
     level: number;
     level_name: string;
@@ -31,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onTabChange,
   onSwitchUser,
+  onOpenCommandPalette,
   gamification,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -93,8 +96,23 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Tools: Single-line Level/XP Pill + User Switcher */}
+          {/* Right Tools: Quick Search + Single-line Level/XP Pill + User Switcher */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* Command Palette Spotlight Button */}
+            {onOpenCommandPalette && (
+              <button
+                onClick={onOpenCommandPalette}
+                title="Открыть командную строку и быстрый поиск (Ctrl+K)"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs cursor-pointer shadow-sm group"
+              >
+                <Search size={13} className="text-[#04E061] group-hover:scale-110 transition-transform" />
+                <span className="text-[11px] font-medium">Поиск...</span>
+                <kbd className="px-1.5 py-0.2 rounded bg-white/10 text-[9px] font-mono text-slate-300 border border-white/10">
+                  Ctrl+K
+                </kbd>
+              </button>
+            )}
+
             {/* XP / Level Pill: Perfectly formatted on ONE LINE */}
             <button
               onClick={() => onTabChange('achievements')}

@@ -2,23 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatMessage } from '../types';
 import { MarkdownView } from './MarkdownView';
-import { Send, Bot, User, Sparkles, Calendar, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Calendar, Shield, ArrowRight, Loader2, Copy, Check, RotateCcw } from 'lucide-react';
 
 interface ChatWidgetProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onSendMessage: (text: string) => void;
   onNavigateToTab?: (tab: string) => void;
+  onClearChat?: () => void;
+  onShowToast?: (msg: string, type: 'success' | 'xp' | 'info' | 'warning') => void;
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
   messages,
   isLoading,
   onSendMessage,
-  onNavigateToTab
+  onNavigateToTab,
+  onClearChat,
+  onShowToast,
 }) => {
   const [input, setInput] = useState('');
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleCopyMessage = (msgId: string, content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMsgId(msgId);
+    if (onShowToast) onShowToast('Ответ скопирован в буфер обмена', 'info');
+    setTimeout(() => setCopiedMsgId(null), 2000);
+  };
 
   // FIX: Scroll ONLY the internal chat container, NEVER jump or scroll the window/page!
   const scrollToBottom = () => {
@@ -64,9 +76,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
-          <Sparkles size={13} className="text-[#04E061]" />
-          <span>База знаний Playbook</span>
+        <div className="flex items-center gap-2">
+          {onClearChat && (
+            <button
+              onClick={onClearChat}
+              title="Очистить историю диалога"
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer"
+            >
+              <RotateCcw size={13} />
+              <span className="hidden sm:inline">Новый диалог</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+            <Sparkles size={13} className="text-[#04E061]" />
+            <span>База знаний Playbook</span>
+          </div>
         </div>
       </div>
 
@@ -92,12 +117,27 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               )}
 
               <div
-                className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${
+                className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed relative group ${
                   msg.sender === 'user'
                     ? 'bg-gradient-to-r from-[#00AAFF] to-[#0088dd] text-white shadow-lg font-medium'
                     : 'glass-card border-white/10 text-slate-200 shadow-md'
                 }`}
               >
+                {/* Copy button for assistant responses */}
+                {msg.sender === 'assistant' && (
+                  <button
+                    onClick={() => handleCopyMessage(msg.id, msg.content)}
+                    title="Скопировать ответ"
+                    className="absolute top-2.5 right-2.5 p-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition-opacity opacity-0 group-hover:opacity-100 cursor-pointer"
+                  >
+                    {copiedMsgId === msg.id ? (
+                      <Check size={13} className="text-[#04E061]" />
+                    ) : (
+                      <Copy size={13} />
+                    )}
+                  </button>
+                )}
+
                 {/* Message body with rich Markdown formatting */}
                 <div className="space-y-1.5 font-normal">
                   <MarkdownView content={msg.content} />
