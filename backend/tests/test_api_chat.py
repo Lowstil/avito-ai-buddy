@@ -252,3 +252,65 @@ def test_chat_gemini_integration_mentor_and_lead(client, mentor_headers, lead_he
     finally:
         gemini_service._client = original_client
 
+
+# --- ADVANCED AI CHAT INTELLIGENCE TESTS ---
+
+def test_chat_intern_technical_kafka_answer(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Как настроить Kafka consumer group?"}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert "Kafka" in reply or "партици" in reply or "consumer" in reply.lower()
+    assert len(reply) > 100
+    assert "Привет, Арсений! Чем помочь прямо сейчас?" not in reply
+
+def test_chat_intern_technical_binary_search_go(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Как работает бинарный поиск на Go?"}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert "Бинарный поиск" in reply or "Binary" in reply
+    assert "package" in reply or "func" in reply or "O(" in reply
+    assert "Привет, Арсений! Чем помочь прямо сейчас?" not in reply
+
+def test_chat_intern_prod_incident(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Что делать если упал прод?"}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert "Grafana" in reply or "Sentry" in reply or "Rollback" in reply or "инцидент" in reply.lower()
+    assert "прогресс адаптации: 23%" not in reply
+
+def test_chat_intern_goroutine_leak(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Что такое goroutine leak и как его обнаружить?"}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert "горутин" in reply.lower() or "goroutine" in reply.lower()
+    assert "pprof" in reply or "Done" in reply or "select" in reply
+
+def test_chat_mentor_arbitrary_coaching_question(client, mentor_headers):
+    res = client.post("/api/chat", json={"message": "Как помочь стажеру быстрее освоить Kafka?"}, headers=mentor_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert "наставник" in reply.lower() or "арсени" in reply.lower() or "kafka" in reply.lower()
+    assert "Привет, Алексей! Чем я могу помочь наставнику:" not in reply
+
+def test_chat_lead_arbitrary_management_question(client, lead_headers):
+    res = client.post("/api/chat", json={"message": "Как повысить продуктивность команды и избежать выгорания?"}, headers=lead_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert len(reply) > 100
+    assert "Здравствуйте, Екатерина! Чем я могу помочь тимлиду:" not in reply
+
+def test_chat_offtopic_intellectual_answer(client, intern_headers):
+    res = client.post("/api/chat", json={"message": "Какое расстояние от Земли до Луны?"}, headers=intern_headers)
+    assert res.status_code == 200
+    data = res.json()
+    reply = data["reply"]
+    assert len(reply) > 60
+    assert "Привет, Арсений! Чем помочь прямо сейчас?" not in reply
+
+

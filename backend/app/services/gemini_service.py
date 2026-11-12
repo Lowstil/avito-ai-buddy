@@ -1,8 +1,35 @@
 import os
 import logging
+from pathlib import Path
 from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
+
+# Auto-load .env file if present
+def _load_dotenv_safely():
+    potential_paths = [
+        Path.cwd() / ".env",
+        Path.cwd() / "backend" / ".env",
+        Path(__file__).resolve().parent.parent.parent / ".env",
+        Path(__file__).resolve().parent.parent.parent.parent / ".env",
+    ]
+    for env_path in potential_paths:
+        if env_path.is_file():
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+            except Exception as e:
+                logger.debug(f"Failed to read {env_path}: {e}")
+
+_load_dotenv_safely()
 
 try:
     from google import genai
@@ -30,6 +57,7 @@ class GeminiService:
         self._init_client()
 
     def _init_client(self):
+        _load_dotenv_safely()
         api_key = self.api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
         if HAS_GENAI and api_key and self._client is None:
             try:
@@ -84,7 +112,6 @@ class GeminiService:
                 )
             )
             text = (response.text or "").strip()
-            # Strip markdown fences if Gemini added them despite prompt
             if text.startswith("```"):
                 lines = text.splitlines()
                 if lines[0].startswith("```"):
@@ -105,7 +132,9 @@ class GeminiService:
         context_info: str = "",
         history: Optional[list[dict[str, Any]]] = None
     ) -> Optional[str]:
-        """Generate role-aware conversational reply using Gemini 2.5 Flash."""
+        """Generate role-aware conversational reply using Gemini 2.5 Flash via google-genai SDK.
+        Returns None if Gemini is unkeyed, offline, or returns an error (triggering Fallback Engine).
+        """
         if not self.is_available():
             return None
 
@@ -113,15 +142,15 @@ class GeminiService:
         if user_role == "mentor":
             role_prompt = (
                 f"Вы — специализированный коучинговый AI-ассистент для наставника в Авито ({user_name}, Senior Backend Engineer).\n"
-                "Вы помогаете проводить эффективные 1:1 встречи со стажёром Арсением Новиковым, формулировать развивающую обратную связь, "
-                "составлять чек-листы код-ревью и готовить оценку к Экватору (3 мес) и защите в штат.\n"
+                "Вы помогаете проводить эффективные 1:1 встречи со стажёром Арсением Новиковым, формулировать развивающую обратную связь по методике SBI/GROW, "
+                "составлять чек-листы код-ревью, объяснять сложные инженерные темы подопечному и готовить оценку к Экватору (3 мес) и защите в штат.\n"
                 "Стиль общения: профессиональный, конструктивный, партнёрский."
             )
         elif user_role in ["lead", "hr_bp"]:
             role_prompt = (
                 f"Вы — аналитический стратегический AI-ассистент для тимлида / руководителя в Авито ({user_name}).\n"
-                "Вы фокусируетесь на метриках адаптации команды, скорости онбординга, контроле Zero Bug Policy, "
-                "прохождении испытательного срока стажёрами и подготовке офферов в штат.\n"
+                "Вы фокусируетесь на метриках адаптации команды, DORA-метриках, скорости онбординга (Time to First PR), контроле Zero Bug Policy, "
+                "балансировке нагрузки ментора, управлении рисками деливери и подготовке офферов в штат.\n"
                 "Стиль общения: лаконичный, с опорой на цифры, риски и выводы."
             )
         else:
@@ -139,7 +168,9 @@ class GeminiService:
             "- Отвечайте на русском языке.\n"
             "- Используйте красивый Markdown (списки, жирный шрифт, подсветку кода).\n"
             "- Приводите конкретные примеры стандартов Авито (PostgreSQL, Go, Kafka, Lens, ZBP).\n"
-            "- Если пользователь спрашивает о зарплатах коллег или секретах прод-баз — вежливо напомните о политике конфиденциальности (КИ).\n"
+            "- Если пользователь задаёт сложный алгоритмический, архитектурный или технический вопрос — давайте развёрнутый профессиональный ответ с примерами кода и обоснованием сложности (Big-O).\n"
+            "- Если пользователь задаёт вопрос вне темы онбординга — отвечайте вежливо, умно и профессионально.\n"
+            "- Если пользователь спрашивает о закрытых данных (зарплаты, пароли от прод-баз) — вежливо напомните о политике конфиденциальности (КИ).\n"
         )
 
         history_context = ""
@@ -169,9 +200,10 @@ class GeminiService:
                     temperature=0.3
                 )
             )
-            return (response.text or "").strip()
+            text = (response.text or "").strip()
+            return text if text else None
         except Exception as e:
-            logger.error(f"Gemini chat generation failed: {e}")
+            logger.warning(f"Gemini chat generation API call failed: {e}")
             return None
 
 gemini_service = GeminiService()

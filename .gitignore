@@ -38,8 +38,10 @@ frontend/dist-ssr/
 .env.*
 !.env.example
 
-# IDE
+# IDE & Agent artifacts
 .vscode/
 .idea/
 *.swp
 *.swo
+.agents/
+

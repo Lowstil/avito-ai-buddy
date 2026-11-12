@@ -3,6 +3,25 @@ from typing import Any, Optional
 from app.models.schemas import ChatResponse, UserProfile, UserRole
 from app.mcp.tools import mcp_tool_registry
 from app.services.gemini_service import gemini_service
+from app.services.fallback_service import fallback_service
+from app.services.playbook_rag import playbook_rag
+
+GREETING_WORDS = {
+    "привет", "здравствуй", "здравствуйте", "добрый", "день", "утро", "вечер",
+    "доброе", "добрый день", "доброе утро", "добрый вечер", "хай", "хей",
+    "hi", "hello", "hey", "старт", "start", "начать"
+}
+
+def is_pure_greeting(text: str) -> bool:
+    """Checks whether the user message consists solely of greeting words."""
+    cleaned = re.sub(r"[^\w\s]", "", text.strip().lower())
+    words = cleaned.split()
+    if not words:
+        return False
+    phrase = " ".join(words)
+    if phrase in GREETING_WORDS:
+        return True
+    return all(w in GREETING_WORDS for w in words) and len(words) <= 3
 
 def extract_date_and_reason(text: str) -> tuple[Optional[str], str]:
     """Extract and normalize date (YYYY-MM-DD) and reason from user message."""
@@ -54,9 +73,10 @@ def extract_date_and_reason(text: str) -> tuple[Optional[str], str]:
     # Clean up reason string
     if reason:
         cleaned = re.sub(
-            r"(?i)\b(хочу|взять|оформить|запросить|отгул|day-off|day off|дей-офф|дейофф|выходной|на дату|на|по причине|причина)\b",
+            r"\b(хочу|взять|оформить|запросить|отгул|day-off|day off|дей-офф|дейофф|выходной|на дату|на|по причине|причина)\b",
             "",
-            reason
+            reason,
+            flags=re.IGNORECASE
         )
         cleaned = cleaned.strip(", :;.- \t\n")
         reason_val = cleaned if len(cleaned) >= 3 else "По личным обстоятельствам"
@@ -174,7 +194,7 @@ class AgentService:
                 )
 
             # E. Intern Progress Audit
-            if any(kw in lower_text for kw in ["прогресс", "стажёр", "арсений", "как дела", "сводка", "статус стаж"]):
+            if any(kw in lower_text for kw in ["сводка прогресса", "сводка по стаж", "сводка по арсени", "прогресс стажёр", "прогресс арсени", "статус стажёр", "как дела у стаж", "как дела у арсени", "сводку прогресса"]):
                 guide = mcp_tool_registry.execute("generate_mentor_guide", user_id="intern_1")
                 return ChatResponse(
                     reply=(
@@ -197,36 +217,44 @@ class AgentService:
                     sources=["Чек-лист стажёра Авито", "Сервис адаптации Avito Start"]
                 )
 
-            # F. Gemini 2.5 Flash for Mentor (if question is open-ended and key is available)
-            if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "добрый", "hi", "hello"]):
+            # F. Check for bare greetings (e.g. "привет", "добрый день", "здравствуйте")
+            if is_pure_greeting(text):
+                return ChatResponse(
+                    reply=(
+                        f"Привет, {user.name.split()[0]}! Я твой цифровой ассистент по менторингу стажёра **Арсения Новикова** 👨‍💻\n\n"
+                        f"Чем я могу помочь наставнику:\n"
+                        f"• 📊 **Сводка по стажёру:** статус задач чек-листа, блокеры и доступы\n"
+                        f"• 🤝 **План встречи 1:1:** темы, развивающие вопросы и пункты похвалы\n"
+                        f"• 🔍 **Чек-лист код-ревью:** ключевые паттерны и антипаттерны джуниор-кода\n"
+                        f"• 🎯 **Подготовка к Экватору:** критерии оценки и матрица компетенций\n"
+                        f"• 🏖️ **Кадровые согласования:** статус отгулов с подсветкой в календаре\n\n"
+                        f"О чём рассказать подробнее?"
+                    ),
+                    suggested_chips=["Сводка прогресса стажёра", "План встречи 1:1 для ментора", "Чек-лист код-ревью для джуна", "Оценка к Экватору (3 мес)"],
+                    sources=["Avito Start Mentorship Portal"]
+                )
+
+            # G. Generative AI Chat Integration & Context-Aware Fallback for Mentor
+            rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
+            context_info = "\n\n".join([f"Статья: {a['title']}\n{a['content']}" for a in rag_res[:2]]) if rag_res else ""
+
+            if gemini_service.is_available():
                 ai_reply = gemini_service.generate_chat_reply(
                     user_role="mentor",
                     user_name=user.name,
                     message=text,
+                    context_info=context_info,
                     history=history
                 )
                 if ai_reply:
                     return ChatResponse(
                         reply=ai_reply,
                         suggested_chips=["План встречи 1:1 для ментора", "Чек-лист код-ревью для джуна", "Оценка к Экватору (3 мес)"],
-                        sources=["Google Gemini 2.5 Flash", "Avito Mentorship Playbook"]
+                        sources=["Google Gemini 2.5 Flash", "Avito Mentorship Playbook"] + ([f"AvitoTech Playbook: {rag_res[0]['title']}"] if rag_res else [])
                     )
 
-            # G. Default Welcome for Mentor
-            return ChatResponse(
-                reply=(
-                    f"Привет, {user.name.split()[0]}! Я твой цифровой ассистент по менторингу стажёра **Арсения Новикова** 👨‍💻\n\n"
-                    f"Чем я могу помочь наставнику:\n"
-                    f"• 📊 **Сводка по стажёру:** статус задач чек-листа, блокеры и доступы\n"
-                    f"• 🤝 **План встречи 1:1:** темы, развивающие вопросы и пункты похвалы\n"
-                    f"• 🔍 **Чек-лист код-ревью:** ключевые паттерны и антипаттерны джуниор-кода\n"
-                    f"• 🎯 **Подготовка к Экватору:** критерии оценки и матрица компетенций\n"
-                    f"• 🏖️ **Кадровые согласования:** статус отгулов с подсветкой в календаре\n\n"
-                    f"О чём рассказать подробнее?"
-                ),
-                suggested_chips=["Сводка прогресса стажёра", "План встречи 1:1 для ментора", "Чек-лист код-ревью для джуна", "Оценка к Экватору (3 мес)"],
-                sources=["Avito Start Mentorship Portal"]
-            )
+            # Fallback Engine (when Gemini is offline, unkeyed, or throws error)
+            return fallback_service.generate_fallback(user, text, context_info=context_info, history=history)
 
         # -------------------------------------------------------------
         # ROLE 2: TEAM LEAD PERSPECTIVE (Екатерина Соколова)
@@ -282,7 +310,7 @@ class AgentService:
                 )
 
             # D. Sprint Task Allocation
-            if any(kw in lower_text for kw in ["спринт", "задач", "delivery core", "распределен"]):
+            if any(kw in lower_text for kw in ["распределить задачи", "распределение задач", "задачи в спринте 24.1", "планирование спринта", "спринт 24.1"]):
                 return ChatResponse(
                     reply=(
                         "🚀 **Рекомендации по распределению задач в Спринте 24.1 (Delivery Core):**\n\n"
@@ -298,36 +326,44 @@ class AgentService:
                     sources=["Sprint 24.1 Delivery Backlog Planning"]
                 )
 
-            # E. Gemini 2.5 Flash for Team Lead (if question is open-ended and key is available)
-            if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "добрый", "hi", "hello"]):
+            # E. Check for bare greetings (e.g. "привет", "добрый день", "здравствуйте")
+            if is_pure_greeting(text):
+                return ChatResponse(
+                    reply=(
+                        f"Здравствуйте, {user.name.split()[0]}! Я аналитический ассистент по онбордингу и эффективности инженерной команды **Order Management & Delivery Core** 👩‍💼\n\n"
+                        f"Чем я могу помочь тимлиду:\n"
+                        f"• 📈 **Метрики онбординга:** отслеживание Time to First PR и темпа чек-листа\n"
+                        f"• 🏆 **Готовность к офферу:** оценка стажёра по шкале грейда Junior Backend\n"
+                        f"• ⏱️ **Аудит нагрузки ментора:** контроль баланса времени Алексея Смирнова\n"
+                        f"• 🚀 **Планирование спринта:** рекомендации по безопасному распределению задач\n"
+                        f"• 🛡️ **Контроль ZBP:** мониторинг надежности сервисов доставки\n\n"
+                        f"Какой управленческий срез подготовить?"
+                    ),
+                    suggested_chips=["Метрики онбординга команды", "Готовность стажёра к офферу", "Нагрузка наставника Алексея", "Задачи в Спринте 24.1"],
+                    sources=["Avito Engineering Management Hub"]
+                )
+
+            # F. Generative AI Chat Integration & Context-Aware Fallback for Team Lead
+            rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
+            context_info = "\n\n".join([f"Статья: {a['title']}\n{a['content']}" for a in rag_res[:2]]) if rag_res else ""
+
+            if gemini_service.is_available():
                 ai_reply = gemini_service.generate_chat_reply(
                     user_role="lead",
                     user_name=user.name,
                     message=text,
+                    context_info=context_info,
                     history=history
                 )
                 if ai_reply:
                     return ChatResponse(
                         reply=ai_reply,
                         suggested_chips=["Метрики онбординга команды", "Готовность стажёра к офферу", "Нагрузка наставника Алексея"],
-                        sources=["Google Gemini 2.5 Flash", "Avito Engineering Management Hub"]
+                        sources=["Google Gemini 2.5 Flash", "Avito Engineering Management Hub"] + ([f"AvitoTech Playbook: {rag_res[0]['title']}"] if rag_res else [])
                     )
 
-            # F. Default Welcome for Team Lead
-            return ChatResponse(
-                reply=(
-                    f"Здравствуйте, {user.name.split()[0]}! Я аналитический ассистент по онбордингу и эффективности инженерной команды **Order Management & Delivery Core** 👩‍💼\n\n"
-                    f"Чем я могу помочь тимлиду:\n"
-                    f"• 📈 **Метрики онбординга:** отслеживание Time to First PR и темпа чек-листа\n"
-                    f"• 🏆 **Готовность к офферу:** оценка стажёра по шкале грейда Junior Backend\n"
-                    f"• ⏱️ **Аудит нагрузки ментора:** контроль баланса времени Алексея Смирнова\n"
-                    f"• 🚀 **Планирование спринта:** рекомендации по безопасному распределению задач\n"
-                    f"• 🛡️ **Контроль ZBP:** мониторинг надежности сервисов доставки\n\n"
-                    f"Какой управленческий срез подготовить?"
-                ),
-                suggested_chips=["Метрики онбординга команды", "Готовность стажёра к офферу", "Нагрузка наставника Алексея", "Задачи в Спринте 24.1"],
-                sources=["Avito Engineering Management Hub"]
-            )
+            # Fallback Engine (when Gemini is offline, unkeyed, or throws error)
+            return fallback_service.generate_fallback(user, text, context_info=context_info, history=history)
 
         # -------------------------------------------------------------
         # ROLE 3: INTERN PERSPECTIVE (Арсений Новиков)
@@ -437,11 +473,15 @@ class AgentService:
 
         # Multi-turn Slot Filling: Day-off booking
         if state.get("step") == "awaiting_absence_details":
+            is_question = ("?" in text) or any(lower_text.startswith(kw) for kw in [
+                "как", "что", "почему", "где", "кто", "зачем", "объясни", "расскажи", "посоветуй", "покажи", "напиши", "можешь", "подскажи"
+            ])
             extracted_date, extracted_reason = extract_date_and_reason(text)
-            has_date_or_reason = (extracted_date is not None) or any(kw in lower_text for kw in ["врач", "сессия", "экзамен", "дела", "заболел", "отгул", "выходной", "личное", "универ"])
+            has_date = extracted_date is not None
+            has_absence_reason = any(kw in lower_text for kw in ["врач", "сессия", "экзамен", "заболел", "больничн", "свадьб", "похороны", "универ", "семейн", "переезд"])
             
-            if not has_date_or_reason:
-                self._states[user_id] = {}  # User changed topic, cancel flow!
+            if is_question or (not has_date and not has_absence_reason):
+                self._states[user_id] = {}  # User asked question or changed topic: cancel absence flow!
             else:
                 date_val = extracted_date or "2026-11-20"
                 reason_val = extracted_reason if len(extracted_reason) > 3 else "По личным обстоятельствам"
@@ -580,7 +620,8 @@ class AgentService:
             )
 
         # E. Checklist Status & Next Step
-        if any(kw in lower_text for kw in ["чек-лист", "чеклист", "следующий шаг", "что делать", "задач", "план"]):
+        is_checklist_query = any(kw in lower_text for kw in ["чек-лист", "чеклист", "следующий шаг", "мои задачи", "задачи чек-листа", "план онбординга"]) or lower_text.rstrip("?!. ") in ["что делать", "что мне делать", "какой план", "с чего начать"]
+        if is_checklist_query and not any(inc in lower_text for inc in ["прод", "авари", "инцидент", "сбой", "ошибк", "упал", "упала", "баз", "сервис"]):
             summary = mcp_tool_registry.execute("get_checklist_status", user_id=user.user_id).get("summary", {})
             next_t = summary.get("next_recommended_task")
             next_title = next_t.get("title") if next_t else "Все текущие задачи закрыты!"
@@ -603,7 +644,7 @@ class AgentService:
             )
 
         # F. 1:1 Prep for Intern
-        if any(kw in lower_text for kw in ["1:1", "один на один", "встреча с наставником", "экватор", "подготов"]):
+        if any(kw in lower_text for kw in ["подготовиться к встрече", "подготовка к встрече", "план 1:1", "встреча с наставником", "подготовка к 1:1", "подготовиться к 1:1"]):
             res = mcp_tool_registry.execute("generate_1on1_summary", user_id=user.user_id)
             agenda = "\n".join(res.get("summary_points", []))
             return ChatResponse(
@@ -650,14 +691,28 @@ class AgentService:
                 sources=["Avito PaaS Documentation", "Avito Architecture Standards"]
             )
 
-        # I. Playbook RAG & Gemini Synthesis
-        rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
-        context_info = ""
-        if rag_res:
-            context_info = "\n\n".join([f"Статья: {a['title']}\n{a['content']}" for a in rag_res[:2]])
+        # I. Check for bare greetings (e.g. "привет", "привет!", "здравствуйте", "hi", "добрый день")
+        if is_pure_greeting(text):
+            return ChatResponse(
+                reply=(
+                    f"Привет, {user.name.split()[0]}! Я твой цифровой наставник **AI-buddy в Авито** 🚀\n\n"
+                    f"Я здесь, чтобы помогать тебе на каждом шаге стажировки:\n"
+                    f"• 📅 **Оформить отгул или дей-офф** в интерактивном календаре\n"
+                    f"• 🔑 **Получить доступы** к стендам SPT, Lens/k8s, GitLab и Grafana\n"
+                    f"• 📋 **Вести онбординг-чек-лист** и добавлять личные заметки\n"
+                    f"• 📖 **Отвечать на вопросы** по стандартам (Effective Go, Zero Bug Policy, PaaS, code review)\n"
+                    f"• 🤝 **Готовиться к 1:1 с наставником Алексеем**\n\n"
+                    f"Чем помочь прямо сейчас?"
+                ),
+                suggested_chips=["Как оформить отгул?", "Какой мой следующий шаг?", "Что такое Zero Bug Policy?", "Стандарты Code Review"],
+                sources=["Avito Start Onboarding Hub"]
+            )
 
-        # J. Gemini 2.5 Flash Real AI Chat (if GEMINI_API_KEY / GOOGLE_API_KEY provided)
-        if gemini_service.is_available() and not any(kw in lower_text for kw in ["привет", "здравствуй", "hi", "hello"]):
+        # J. Playbook RAG & Generative AI Integration / Robust Fallback
+        rag_res = mcp_tool_registry.execute("search_playbook", query=text).get("results", [])
+        context_info = "\n\n".join([f"Статья: {a['title']}\n{a['content']}" for a in rag_res[:2]]) if rag_res else ""
+
+        if gemini_service.is_available():
             ai_reply = gemini_service.generate_chat_reply(
                 user_role=user.role,
                 user_name=user.name,
@@ -666,38 +721,25 @@ class AgentService:
                 history=history
             )
             if ai_reply:
+                suggested_chips = ["Мой чек-лист", "Стандарты Code Review", "Как оформить отгул?"]
+                if "kafka" in lower_text or "кафк" in lower_text:
+                    suggested_chips = ["Стандарты ZBP", "Тестовые стенды SPT", "Проброс контекста"]
+                elif "прод" in lower_text or "авари" in lower_text or "инцидент" in lower_text:
+                    suggested_chips = ["Мониторинг Lens", "Откат релиза в PaaS", "Дашборд Grafana"]
+                elif "go" in lower_text or "горутин" in lower_text:
+                    suggested_chips = ["Pre-flight Review", "Стандарты Effective Go", "Мой чек-лист"]
+
+                sources = ["Google Gemini 2.5 Flash", "AvitoTech Engineering Guidelines"]
+                if rag_res:
+                    sources.append(f"AvitoTech Playbook: {rag_res[0]['title']}")
+
                 return ChatResponse(
                     reply=ai_reply,
-                    suggested_chips=["Как оформить отгул?", "Мой чек-лист", "Стандарты Code Review"],
-                    sources=["Google Gemini 2.5 Flash", "Avito Knowledge Hub"]
+                    suggested_chips=suggested_chips,
+                    sources=sources
                 )
 
-        if rag_res:
-            top_article = rag_res[0]
-            return ChatResponse(
-                reply=(
-                    f"📖 **{top_article['title']}**\n\n"
-                    f"{top_article['content']}\n\n"
-                    f"*(Раздел: {top_article['category']})*"
-                ),
-                suggested_chips=["Запросить доступы", "Мой чек-лист", "План 1:1"],
-                sources=[f"AvitoTech Playbook: {top_article['title']}"]
-            )
-
-        # K. Default Intern Welcome
-        return ChatResponse(
-            reply=(
-                f"Привет, {user.name.split()[0]}! Я твой цифровой наставник **AI-buddy в Авито** 🚀\n\n"
-                f"Я здесь, чтобы помогать тебе на каждом шаге стажировки:\n"
-                f"• 📅 **Оформить отгул или дей-офф** в интерактивном календаре\n"
-                f"• 🔑 **Получить доступы** к стендам SPT, Lens/k8s, GitLab и Grafana\n"
-                f"• 📋 **Вести онбординг-чек-лист** и добавлять личные заметки\n"
-                f"• 📖 **Отвечать на вопросы** по стандартам (Effective Go, Zero Bug Policy, PaaS, code review)\n"
-                f"• 🤝 **Готовиться к 1:1 с наставником Алексеем**\n\n"
-                f"Чем помочь прямо сейчас?"
-            ),
-            suggested_chips=["Как оформить отгул?", "Какой мой следующий шаг?", "Что такое Zero Bug Policy?", "Стандарты Code Review"],
-            sources=["Avito Start Onboarding Hub"]
-        )
+        # Fallback Engine (when Gemini is offline, unkeyed, or throws error)
+        return fallback_service.generate_fallback(user, text, context_info=context_info, history=history)
 
 agent_service = AgentService()
