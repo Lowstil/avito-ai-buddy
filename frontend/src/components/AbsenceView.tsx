@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import type { AbsenceRequest, UserProfile } from '../types';
 import { GlassyCalendar, formatRussianDate } from './GlassyCalendar';
 import {
@@ -43,6 +44,23 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
 
   // Detailed View Modal State
   const [selectedAbsence, setSelectedAbsence] = useState<AbsenceRequest | null>(null);
+
+  useEffect(() => {
+    if (!rejectingAbsence && !selectedAbsence) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setRejectingAbsence(null);
+        setSelectedAbsence(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [rejectingAbsence, selectedAbsence]);
 
   const isMentorOrLead = currentUser.role === 'mentor' || currentUser.role === 'lead';
 
@@ -395,15 +413,20 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
         </div>
       </div>
 
-      {/* REJECTION REASON MODAL DIALOG (Safe Mobile Viewport max-h-[88dvh]) */}
-      <AnimatePresence>
-        {rejectingAbsence && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md">
+      {/* REJECTION REASON MODAL DIALOG — Portaled to document.body */}
+      {rejectingAbsence &&
+        createPortal(
+          <div
+            data-testid="reject-absence-modal-backdrop"
+            className="fixed inset-0 z-[120] glass-backdrop bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+            onClick={() => setRejectingAbsence(null)}
+          >
             <motion.div
+              data-testid="reject-absence-modal"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-modal glass-panel w-[94vw] max-w-lg max-h-[88dvh] flex flex-col rounded-3xl border border-rose-500/40 shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel glass-modal specular-inset-strong w-full max-w-lg max-h-[86dvh] flex flex-col rounded-2xl border border-rose-500/40 overflow-hidden shadow-2xl my-auto"
             >
               <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 shrink-0">
                 <h3 className="text-sm sm:text-base font-black text-glass-pure flex items-center gap-2">
@@ -413,13 +436,13 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setRejectingAbsence(null)}
-                  className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-glass-muted hover:text-white hover:bg-white/10 cursor-pointer"
+                  className="min-w-[40px] min-h-[40px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-glass-muted hover:text-white hover:bg-white/10 cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-4 sm:p-5 space-y-4 overflow-y-auto glass-scrollbar flex-1">
+              <div className="p-4 sm:p-5 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain glass-scrollbar">
                 {/* Date highlight reminder */}
                 <div className="p-3.5 rounded-2xl bg-rose-950/50 border border-rose-500/40 text-xs text-rose-200">
                   <p className="font-bold text-white">
@@ -464,7 +487,7 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setRejectingAbsence(null)}
-                  className="min-h-[44px] sm:min-h-[38px] px-4 py-2 rounded-xl text-xs font-bold text-glass-muted hover:text-white cursor-pointer"
+                  className="min-h-[42px] sm:min-h-[38px] px-4 py-2 rounded-xl text-xs font-bold text-glass-muted hover:text-white cursor-pointer"
                 >
                   Отмена
                 </button>
@@ -472,25 +495,30 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                   type="submit"
                   form="reject-absence-form"
                   disabled={!rejectionReason.trim()}
-                  className="min-h-[44px] sm:min-h-[38px] px-5 py-2 rounded-xl bg-[#FF5252] text-white font-extrabold text-xs hover:bg-rose-600 transition-colors disabled:opacity-40 cursor-pointer glow-coral"
+                  className="min-h-[42px] sm:min-h-[38px] px-5 py-2 rounded-xl bg-[#FF5252] text-white font-extrabold text-xs hover:bg-rose-600 transition-colors disabled:opacity-40 cursor-pointer glow-coral"
                 >
                   Отклонить заявку
                 </button>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
-      </AnimatePresence>
 
-      {/* FULL REQUEST DETAIL & CALENDAR HIGHLIGHT MODAL (Safe Mobile Viewport max-h-[88dvh]) */}
-      <AnimatePresence>
-        {selectedAbsence && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md">
+      {/* FULL REQUEST DETAIL & CALENDAR HIGHLIGHT MODAL — Portaled to document.body */}
+      {selectedAbsence &&
+        createPortal(
+          <div
+            data-testid="absence-detail-modal-backdrop"
+            className="fixed inset-0 z-[120] glass-backdrop bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+            onClick={() => setSelectedAbsence(null)}
+          >
             <motion.div
+              data-testid="absence-detail-modal"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-modal glass-panel w-[94vw] max-w-2xl max-h-[88dvh] flex flex-col rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel glass-modal specular-inset-strong w-full max-w-2xl max-h-[86dvh] flex flex-col rounded-2xl border border-white/20 overflow-hidden shadow-2xl my-auto"
             >
               <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
@@ -502,13 +530,13 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedAbsence(null)}
-                  className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-glass-muted hover:text-white hover:bg-white/10 cursor-pointer shrink-0"
+                  className="min-w-[40px] min-h-[40px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-xl text-glass-muted hover:text-white hover:bg-white/10 cursor-pointer shrink-0"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-4 sm:p-5 overflow-y-auto glass-scrollbar flex-1">
+              <div className="p-4 sm:p-5 flex-1 min-h-0 overflow-y-auto overscroll-contain glass-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                   {/* Left Column: Calendar with Highlighted Day */}
                   <div className="md:col-span-6 space-y-2">
@@ -585,7 +613,7 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                             onApproveAbsence(selectedAbsence.id);
                             setSelectedAbsence(null);
                           }}
-                          className="flex-1 min-h-[44px] sm:min-h-[38px] py-2 rounded-xl bg-[#04E061] text-slate-950 font-extrabold text-xs hover:bg-[#03c754] transition-colors cursor-pointer flex items-center justify-center gap-1.5 glow-green"
+                          className="flex-1 min-h-[42px] sm:min-h-[38px] py-2 rounded-xl bg-[#04E061] text-slate-950 font-extrabold text-xs hover:bg-[#03c754] transition-colors cursor-pointer flex items-center justify-center gap-1.5 glow-green"
                         >
                           <CheckCircle2 size={14} /> Одобрить
                         </button>
@@ -597,7 +625,7 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                             setRejectingAbsence(target);
                             setRejectionReason('');
                           }}
-                          className="flex-1 min-h-[44px] sm:min-h-[38px] py-2 rounded-xl bg-rose-500/20 text-[#ff6b6b] border border-rose-500/40 font-extrabold text-xs hover:bg-rose-500/30 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                          className="flex-1 min-h-[42px] sm:min-h-[38px] py-2 rounded-xl bg-rose-500/20 text-[#ff6b6b] border border-rose-500/40 font-extrabold text-xs hover:bg-rose-500/30 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           <Ban size={14} /> Отклонить...
                         </button>
@@ -614,7 +642,7 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                     onAskBuddy('Какие правила отгулов действуют в Авито для стажёров?');
                     setSelectedAbsence(null);
                   }}
-                  className="min-h-[44px] sm:min-h-[38px] px-3 py-2 rounded-xl text-xs text-[#04E061] font-bold hover:underline flex items-center gap-1.5 cursor-pointer"
+                  className="min-h-[42px] sm:min-h-[38px] px-3 py-2 rounded-xl text-xs text-[#04E061] font-bold hover:underline flex items-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles size={14} /> Спросить совет у AI-buddy
                 </button>
@@ -622,15 +650,15 @@ export const AbsenceView: React.FC<AbsenceViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedAbsence(null)}
-                  className="min-h-[44px] sm:min-h-[38px] px-4 py-2 rounded-xl glass-pill text-white font-bold text-xs hover:bg-white/20 transition-colors cursor-pointer"
+                  className="min-h-[42px] sm:min-h-[38px] px-4 py-2 rounded-xl glass-pill text-white font-bold text-xs hover:bg-white/20 transition-colors cursor-pointer"
                 >
                   Закрыть окно
                 </button>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 };

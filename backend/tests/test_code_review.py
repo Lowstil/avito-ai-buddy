@@ -206,3 +206,98 @@ def test_code_review_python_top_level_bare_identifier_blocked(client, intern_hea
     assert data["status"] == "blocked"
     assert data["score"] == 0
     assert any("SEMANTICS" in i["rule_id"] for i in data["issues"])
+
+
+def test_code_review_playground_clean_zbp_presets_score_100(client, intern_headers):
+    sample_clean_go = """package delivery
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+// ProcessDeliveryOrders processes pending orders following Avito standards
+func ProcessDeliveryOrders(ctx context.Context, db *sql.DB, limit int) error {
+	// ✅ Safe context timeout
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	// ✅ Safe query with explicit LIMIT
+	rows, err := db.QueryContext(ctx, "SELECT id, user_id, status FROM delivery_orders WHERE status = 'pending' LIMIT $1", limit)
+	if err != nil {
+		// ✅ Proper error wrapping with %w for Sentry tracing
+		return fmt.Errorf("failed to fetch delivery orders: %w", err)
+	}
+	defer rows.Close()
+
+	// ✅ Explicit client timeout to prevent pod socket starvation
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	for rows.Next() {
+		var id, status string
+		var userID int64
+		if err := rows.Scan(&id, &userID, &status); err != nil {
+			return fmt.Errorf("failed to scan order row: %w", err)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://carrier-api.internal/notify?order="+id, nil)
+		if err != nil {
+			return fmt.Errorf("failed to build carrier request: %w", err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("carrier notification error: %w", err)
+		}
+		resp.Body.Close()
+	}
+
+	return rows.Err()
+}"""
+    res_go = client.post(
+        "/api/code-review/analyze",
+        json={"code": sample_clean_go, "language": "go"},
+        headers=intern_headers,
+    )
+    assert res_go.status_code == 200
+    data_go = res_go.json()
+    assert data_go["score"] == 100
+    assert data_go["status"] == "passed"
+    assert data_go["zbp_compliant"] is True
+    assert len(data_go["issues"]) == 0
+
+    sample_clean_py = '''"""Модуль доставки заказов по стандартам надежности AvitoTech"""
+import logging
+import requests
+
+logger = logging.getLogger(__name__)
+
+def fetch_delivery_batch(user_id: int) -> list:
+    """Безопасный запрос с явным таймаутом сокета и типизированной обработкой"""
+    try:
+        # ✅ Обязательный таймаут (connect: 1s, read: 3s)
+        resp = requests.get(
+            f"http://delivery-api.internal/batch?user={user_id}",
+            timeout=(1.0, 3.0)
+        )
+        resp.raise_for_status()
+        return resp.json().get("items", [])
+    except (requests.RequestException, ValueError) as err:
+        logger.error("Ошибка при получении пачки доставки для user %s: %s", user_id, err)
+        return []
+'''
+    res_py = client.post(
+        "/api/code-review/analyze",
+        json={"code": sample_clean_py, "language": "python"},
+        headers=intern_headers,
+    )
+    assert res_py.status_code == 200
+    data_py = res_py.json()
+    assert data_py["score"] == 100
+    assert data_py["status"] == "passed"
+    assert data_py["zbp_compliant"] is True
+    assert len(data_py["issues"]) == 0
+

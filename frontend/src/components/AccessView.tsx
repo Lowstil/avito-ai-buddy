@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { AccessItem, UserProfile } from '../types';
 import {
   Shield,
@@ -12,7 +13,8 @@ import {
   GitBranch,
   Lock,
   Key,
-  Layers
+  Layers,
+  X
 } from 'lucide-react';
 
 interface AccessViewProps {
@@ -31,7 +33,23 @@ export const AccessView: React.FC<AccessViewProps> = ({
   onAskBuddy
 }) => {
   const [filter, setFilter] = useState<string>('all');
+  const [selectedAccess, setSelectedAccess] = useState<AccessItem | null>(null);
+  const [justification, setJustification] = useState<string>('Необходимо для выполнения задач стажировки в спринте');
   const isMentorOrLead = currentUser.role === 'mentor' || currentUser.role === 'lead';
+
+  useEffect(() => {
+    if (!selectedAccess) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedAccess(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedAccess]);
 
   const getIcon = (key: string) => {
     switch (key) {
@@ -198,7 +216,8 @@ export const AccessView: React.FC<AccessViewProps> = ({
             <div
               key={item.id}
               data-testid={`access-card-${item.system_key}`}
-              className={`glass-card glass-card-interactive glass-specular specular-inset p-4 rounded-2xl border transition-all flex flex-col justify-between relative overflow-hidden ${
+              onClick={() => setSelectedAccess(item)}
+              className={`glass-card glass-card-interactive glass-specular specular-inset p-4 rounded-2xl border transition-all flex flex-col justify-between relative overflow-hidden cursor-pointer ${
                 item.status === 'active'
                   ? 'border-neon-green bg-emerald-950/15'
                   : item.status === 'requested'
@@ -245,7 +264,7 @@ export const AccessView: React.FC<AccessViewProps> = ({
               </div>
 
               {/* Action Button strictly respecting RBAC & Touch Targets (>= 44px on mobile) */}
-              <div className="pt-2.5 border-t border-white/10">
+              <div className="pt-2.5 border-t border-white/10" onClick={(e) => e.stopPropagation()}>
                 {/* 1. Item is active */}
                 {item.status === 'active' && (
                   <div className="min-h-[44px] sm:min-h-[36px] flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[#04E061] text-xs font-extrabold">
@@ -300,6 +319,125 @@ export const AccessView: React.FC<AccessViewProps> = ({
           );
         })}
       </div>
+
+      {/* ACCESS ITEM DETAIL & REQUEST MODAL — Portaled to document.body */}
+      {selectedAccess &&
+        createPortal(
+          <div
+            data-testid="access-detail-modal-backdrop"
+            className="fixed inset-0 z-[120] glass-backdrop bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+            onClick={() => setSelectedAccess(null)}
+          >
+            <div
+              data-testid="access-detail-modal"
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel glass-modal specular-inset-strong w-full max-w-lg max-h-[86dvh] flex flex-col rounded-2xl border border-white/20 overflow-hidden shadow-2xl my-auto"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 p-4 sm:p-5 border-b border-white/10 shrink-0">
+                <div className="space-y-1 min-w-0">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#b085f5] block">
+                    ServiceDesk RBAC • {selectedAccess.system_key}
+                  </span>
+                  <h3 className="text-sm sm:text-base font-black text-glass-pure leading-snug">
+                    {selectedAccess.system_name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAccess(null)}
+                  aria-label="Закрыть модальное окно"
+                  className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl glass-pill text-glass-secondary hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Scrollable Body */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain glass-scrollbar p-4 sm:p-5 space-y-4">
+                <div className="p-3.5 rounded-2xl bg-black/45 border border-white/10 text-xs text-glass-primary leading-relaxed space-y-2">
+                  <p>{selectedAccess.description}</p>
+                  <div className="pt-2 border-t border-white/10 text-[11px] text-glass-secondary">
+                    Статус:{' '}
+                    {selectedAccess.status === 'active' ? (
+                      <strong className="text-[#04E061]">✓ Активен и готов к работе</strong>
+                    ) : selectedAccess.status === 'requested' ? (
+                      <strong className="text-[#b085f5]">⏳ Заявка отправлена на согласование наставнику</strong>
+                    ) : (
+                      <strong className="text-[#00AAFF]">Доступен для запроса</strong>
+                    )}
+                  </div>
+                </div>
+
+                {selectedAccess.status === 'not_requested' && !isMentorOrLead && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-glass-secondary">
+                      Обоснование для ServiceDesk (Zero Trust):
+                    </label>
+                    <textarea
+                      value={justification}
+                      onChange={(e) => setJustification(e.target.value)}
+                      rows={2}
+                      className="glass-input w-full bg-slate-950/90 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#00AAFF]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 sm:px-5 sm:py-3.5 border-t border-white/10 bg-slate-950/50 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAskBuddy(`Зачем нужен доступ «${selectedAccess.system_name}» и как его настроить?`);
+                    setSelectedAccess(null);
+                  }}
+                  className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold glass-pill text-[#b085f5] hover:text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles size={14} />
+                  <span>Спросить AI-buddy</span>
+                </button>
+
+                {selectedAccess.status === 'not_requested' && !isMentorOrLead && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRequestAccess(selectedAccess.system_key, justification.trim() || 'Необходимо для задач стажировки');
+                      setSelectedAccess(null);
+                    }}
+                    className="min-h-[40px] px-4 py-2 rounded-xl bg-[#00AAFF] text-white font-extrabold text-xs hover:bg-[#0090dd] cursor-pointer glow-blue"
+                  >
+                    Отправить заявку
+                  </button>
+                )}
+
+                {selectedAccess.status !== 'active' && isMentorOrLead && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onGrantAccess(selectedAccess.system_key);
+                      setSelectedAccess(null);
+                    }}
+                    className="min-h-[40px] px-4 py-2 rounded-xl bg-[#04E061] text-slate-950 font-extrabold text-xs hover:bg-[#03c754] cursor-pointer glow-green"
+                  >
+                    Подтвердить выдачу
+                  </button>
+                )}
+
+                {selectedAccess.status === 'active' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAccess(null)}
+                    className="min-h-[40px] px-4 py-2 rounded-xl glass-pill text-white font-bold text-xs cursor-pointer"
+                  >
+                    Закрыть
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

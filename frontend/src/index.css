@@ -156,6 +156,25 @@
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 25px 70px rgba(0, 0, 0, 0.80), inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
+
+  /* Prevent any glass surface or animated wrapper from establishing a containing block
+     for position:fixed modal overlays (.fixed.inset-0) when scrolled */
+  .glass-panel:has(.fixed),
+  .glass-card:has(.fixed),
+  .animate-fade-in:has(.fixed),
+  [data-testid="checklist-view"]:has(.fixed),
+  [data-testid="achievements-view"]:has(.fixed),
+  [data-testid="absence-view"]:has(.fixed),
+  [data-testid="access-view"]:has(.fixed) {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
+    will-change: auto !important;
+    contain: none !important;
+    overflow: visible !important;
+  }
 }
 
 @layer utilities {
@@ -475,10 +494,25 @@
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 }
 
 .animate-slide-in-right {
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+  transform: none;
 }

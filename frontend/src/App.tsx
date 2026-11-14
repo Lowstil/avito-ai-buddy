@@ -366,7 +366,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#080C14] glass-ambient text-slate-100 relative overflow-hidden flex flex-col justify-between selection:bg-[#04E061]/30">
+    <div className="min-h-screen bg-[#080C14] glass-ambient text-slate-100 relative overflow-x-hidden flex flex-col justify-between selection:bg-[#04E061]/30">
       
       {/* Background Glowing Liquid Spheres Container */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
@@ -388,13 +388,13 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-20 xl:pb-6 w-full z-10 space-y-3 sm:space-y-4 flex-1 flex flex-col">
+      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 pt-2.5 sm:pt-3 pb-20 xl:pb-5 z-10 space-y-2.5 sm:space-y-3 flex-1 flex flex-col min-w-0">
         
-        {/* User Role Quick Switch Bar with ALL 3 Personas (Slim ~38px height) */}
-        <div className="glass-panel px-3.5 py-1.5 rounded-xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#04E061] shadow-[0_0_8px_#04E061]"></span>
-            <span className="text-slate-300">
+        {/* User Role Quick Switch Bar with ALL 3 Personas (Slim ~34px height) */}
+        <div className="glass-panel px-3 py-1.5 rounded-xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-1.5 text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-[#04E061] shadow-[0_0_8px_#04E061] shrink-0"></span>
+            <span className="text-slate-300 truncate">
               Текущий пользователь: <strong className="text-white text-xs">{currentUser.name}</strong>{' '}
               <span className="text-slate-400">
                 ({currentUser.role === 'intern' ? '🎓 Стажёр Backend' : currentUser.role === 'mentor' ? '👨‍💻 Наставник (Buddy)' : '👩‍💼 Тимлид команды'})
@@ -402,7 +402,7 @@ export const App: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
             <span className="text-slate-400 font-medium mr-1 text-[11px]">Быстрый вход:</span>
             {users.map((u) => {
               const isActive = u.user_id === currentUser.user_id;
@@ -410,7 +410,7 @@ export const App: React.FC = () => {
                 <button
                   key={u.user_id}
                   onClick={() => handleSwitchUser(u.user_id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer border text-[11px] ${
+                  className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg transition-all cursor-pointer border text-[11px] ${
                     isActive
                       ? 'bg-white/20 text-white font-bold border-white/40 shadow-sm ring-1 ring-[#04E061]'
                       : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white'
@@ -435,7 +435,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Dynamic 4 Stats Cards based on Active User Role */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {currentUser.role === 'intern' && (
             <>
               <StatsCard
@@ -562,22 +562,22 @@ export const App: React.FC = () => {
 
         {/* TAB 1: AI-Buddy Chat with Side Quick Actions */}
         {activeTab === 'chat' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             
             {/* Left Quick Helpers (4 cols) */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
+            <div className="lg:col-span-4 space-y-3">
+              <div className="glass-panel p-4 rounded-3xl border border-white/10 space-y-2.5">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-[#04E061]" />
                   Быстрые действия ({currentUser.role === 'mentor' ? 'Наставник' : currentUser.role === 'lead' ? 'Тимлид' : 'Стажёр'})
                 </h4>
                 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {currentUser.role === 'intern' && (
                     <>
                       <button
                         onClick={() => handleSendMessage('Мне нужен отгул на пятницу, помоги оформить')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🏖️ Оформить отгул (Day-off)</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
@@ -585,7 +585,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Какой мой следующий шаг по чек-листу стажёра?')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🎯 Узнать следующий шаг</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
@@ -593,7 +593,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Что такое Zero Bug Policy в Авито простыми словами?')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🛡️ Правило Zero Bug Policy</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
@@ -601,7 +601,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Помоги подготовиться к встрече 1:1 с наставником')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🤝 Подготовка к встрече 1:1</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
@@ -613,7 +613,7 @@ export const App: React.FC = () => {
                     <>
                       <button
                         onClick={() => handleSendMessage('Сводка прогресса стажёра Арсения')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>📊 Сводка прогресса подопечного</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
@@ -621,7 +621,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Составь план 1:1 встречи со стажёром Арсением')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🤝 План встречи 1:1 для ментора</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
@@ -629,7 +629,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Чек-лист код-ревью для джуниор бэкендера (Go, Postgres, Kafka)')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🔍 Чек-лист код-ревью для джуна</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
@@ -637,7 +637,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Оценка готовности стажёра к Экватору (3 месяца)')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🎯 Оценка к Экватору (3 мес)</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
@@ -649,7 +649,7 @@ export const App: React.FC = () => {
                     <>
                       <button
                         onClick={() => handleSendMessage('Метрики онбординга команды: Time to First PR и ZBP')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#04E061]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>📈 Метрики онбординга команды</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#04E061] transition-colors" />
@@ -657,7 +657,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Оценка готовности стажёра Арсения к офферу Junior Backend')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#00AAFF]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🏆 Готовность стажёра к офферу</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#00AAFF] transition-colors" />
@@ -665,7 +665,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Аудит нагрузки наставника Алексея Смирнова')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#965EEB]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>⏱️ Нагрузка наставника Алексея</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#965EEB] transition-colors" />
@@ -673,7 +673,7 @@ export const App: React.FC = () => {
 
                       <button
                         onClick={() => handleSendMessage('Распределение задач Delivery Core в Спринте 24.1')}
-                        className="w-full text-left p-3 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
+                        className="w-full text-left p-2.5 rounded-2xl glass-card hover:border-[#FF5252]/50 transition-all text-xs text-slate-200 cursor-pointer flex items-center justify-between group"
                       >
                         <span>🚀 Задачи в Спринте 24.1</span>
                         <ArrowRight size={13} className="text-slate-500 group-hover:text-[#FF5252] transition-colors" />
@@ -685,7 +685,7 @@ export const App: React.FC = () => {
 
               {/* Progress Summary Box */}
               {summary && (
-                <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-2">
+                <div className="glass-panel p-4 rounded-3xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">
                       {currentUser.role === 'intern' ? 'Твой прогресс' : currentUser.role === 'mentor' ? 'Прогресс Арсения' : 'Индекс команды'}

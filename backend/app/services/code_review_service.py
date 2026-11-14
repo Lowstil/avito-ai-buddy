@@ -354,9 +354,15 @@ class CodeReviewService:
 
         if lang == "go":
             # Rule 1: Missing context in I/O / DB / HTTP calls (Go)
+            # Note: client.Do(req) carries context inside *http.Request (created via http.NewRequestWithContext or req.WithContext)
+            has_req_ctx = "NewRequestWithContext" in code or "WithContext" in code or "ctx context.Context" in code
             for idx, line in enumerate(lines, 1):
-                if re.search(r'\.(Query|Exec|Get|Post|Do)\(', line) and "ctx" not in line and "context" not in line:
-                    stripped = line.strip()
+                stripped = line.strip()
+                if stripped.startswith("//"):
+                    continue
+                is_unbounded_io = bool(re.search(r'\.(Query|Exec|Get|Post)\(', line))
+                is_bare_do = bool(re.search(r'\.Do\(', line)) and not has_req_ctx
+                if (is_unbounded_io or is_bare_do) and "ctx" not in line and "context" not in line:
                     issues.append(CodeReviewIssue(
                         id=f"issue_ctx_{idx}",
                         rule_id="AVITO-GO-001",
@@ -697,9 +703,14 @@ class CodeReviewService:
 
             refactored = re.sub(r'fmt\.Errorf\([^)]*\)', fix_err_wrap, refactored)
 
-            # 6. db.Query -> db.QueryContext
+            # 6. db.Query -> db.QueryContext and client.Get -> NewRequestWithContext + client.Do
             refactored = re.sub(r'\bdb\.Query\(', 'db.QueryContext(ctx, ', refactored)
             refactored = re.sub(r'\bdb\.Exec\(', 'db.ExecContext(ctx, ', refactored)
+            refactored = re.sub(
+                r'resp,\s*err\s*:=\s*client\.Get\(([^)]+)\)',
+                r'req, err := http.NewRequestWithContext(ctx, http.MethodGet, \1, nil)\n\t\tif err != nil {\n\t\t\treturn fmt.Errorf("request creation failed: %w", err)\n\t\t}\n\t\tresp, err := client.Do(req)',
+                refactored
+            )
 
             # 7. Ignored scan error: _ = rows.Scan(...)
             refactored = re.sub(

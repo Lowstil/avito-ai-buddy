@@ -255,19 +255,6 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
             </button>
             <button
               type="button"
-              data-testid="preset-invalid-py"
-              onClick={() => {
-                setCode('ddd');
-                setLanguage('python');
-                setResult(null);
-                if (onShowToast) onShowToast('Загружен некорректный фрагмент "ddd" (тест блокировки)', 'warning');
-              }}
-              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
-            >
-              Python: Невалидный "ddd"
-            </button>
-            <button
-              type="button"
               data-testid="preset-bad-py"
               onClick={() => {
                 setCode(SAMPLE_BAD_PY);

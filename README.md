@@ -2,6 +2,7 @@
 ### Кейс хакатона Hack&Change 2026 • Avito Start
 
 [![CI Pipeline](https://github.com/Lowstil/avito-ai-buddy/actions/workflows/ci.yml/badge.svg)](https://github.com/Lowstil/avito-ai-buddy/actions)
+[![Demo Video](https://img.shields.io/badge/%F0%9F%8E%AC%20Demo%20Video-Watch%20MP4-04E061.svg)](https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4)
 [![Coverage](https://img.shields.io/badge/coverage-87%25%20(112%20tests)-brightgreen.svg)](https://github.com/Lowstil/avito-ai-buddy)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![React](https://img.shields.io/badge/react-19%20TypeScript-61dafb.svg)](https://react.dev/)
@@ -18,13 +19,26 @@
 
 ## 📑 Навигация по сдаче хакатона
 
-1. 🎬 **Видеодемонстрация (MP4, путь от запроса до результата):** [`docs/demo.mp4`](docs/demo.mp4) — расширенное Full-HD видео (17+ интерактивных сцен, демонстрирующее обновлённый интерфейс **Liquid Glass**, работу всех 3 ролей, песочницу Pre-flight Code Review с AST/Gemini анализом, Command Palette `Ctrl+K`, оформление отгула в чате и календаре, согласование наставником, сквозную синхронизацию выдачи доступов и аналитические срезы тимлида).
+1. 🎬 **Видеодемонстрация работы решения (MP4):** [**▶️ Смотреть / скачать видео (`docs/demo.mp4`)**](https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4) • [**Открыть файл в GitHub (`docs/demo.mp4`)**](https://github.com/Lowstil/avito-ai-buddy/blob/master/docs/demo.mp4) — полное Full-HD видео пути пользователя от запроса до результата (интерфейс **Liquid Glass**, работа всех 3 ролей: Стажёр / Наставник / Тимлид, песочница Pre-flight Code Review с AST/Gemini анализом и эталоном Clean ZBP 100/100, Command Palette `Ctrl+K`, оформление отгула в чате и календаре, согласование наставником, сквозная синхронизация выдачи доступов и аналитические метрики тимлида).
 2. 📸 **Скриншоты ключевых экранов:** каталог [`docs/screenshots/`](docs/screenshots/) с доказательствами работы интерфейса Liquid Glass и ответов гибридного ИИ.
 3. 📊 **Продуктовая презентация (PDF и HTML):** [`docs/presentation/presentation.pdf`](docs/presentation/presentation.pdf) (исходник: [`docs/presentation/slides.html`](docs/presentation/slides.html)).
-4. 🎥 **Сценарий видеодемонстрации (Таймкоды):** [`docs/video_demo_script.md`](docs/video_demo_script.md).
-5. 📜 **SDD-спецификации (OpenSpec / spec-kit):** каталог [`specs/`](specs/).
-6. 🧪 **Отчёт о покрытии тестами (87% при нормативе >80%, 112 тестов):** [`backend/htmlcov/`](backend/htmlcov/) (112 passed unit & integration tests).
-7. 🔐 **Доступ для жюри:** для приватных репозиториев доступ предоставлен аккаунту `hack-and-change-2026`.
+4. 📜 **SDD-спецификации (OpenSpec / spec-kit):** каталог [`specs/`](specs/).
+5. 🧪 **Отчёт о покрытии тестами (87% при нормативе >80%, 112 тестов):** [`backend/htmlcov/`](backend/htmlcov/) (112 passed unit & integration tests).
+6. 🔐 **Доступ для жюри:** для приватных репозиториев доступ предоставлен аккаунту `hack-and-change-2026`.
+
+---
+
+## 🎬 Видеодемонстрация (Demo Video)
+
+> **Прямые ссылки на видеоролик (Full HD 1080p MP4):**
+> * ▶️ [**Прямая ссылка на видео (`https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4`)**](https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4)
+> * 📂 [**Страница видео в репозитории GitHub (`docs/demo.mp4`)**](https://github.com/Lowstil/avito-ai-buddy/blob/master/docs/demo.mp4)
+
+<video src="https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4" controls width="100%"></video>
+
+[![Смотреть видеодемонстрацию Avito AI-Buddy (docs/demo.mp4)](docs/screenshots/01_intern_dashboard_overview.png)](https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4)
+
+*Нажмите на превью или ссылку выше, чтобы сразу открыть и воспроизвести видео [`docs/demo.mp4`](https://github.com/Lowstil/avito-ai-buddy/raw/master/docs/demo.mp4).*
 
 ---
 
@@ -68,7 +82,7 @@
 
 ---
 
-## 🌟 Ключевые возможности и реализованные сценарии
+## 🌟 Ключевые возможности и функциональные модули
 
 ### 1. Интеллектуальный гибридный AI-чат (Gemini 2.5 Flash + Playbook RAG + Deep Cognitive Engine)
 * **Трёхконтурная архитектура интеллекта:** объединяет облачную модель **Google Gemini 2.5 Flash**, семантический поиск **Playbook RAG по 16 глубоким инженерным гайдам Авито** (Zero Bug Policy, Context Timeout в Go, Kafka & Datanode, PostgreSQL Highload & Индексы, SRE & Incident Response, Observability: Grafana/Prometheus/Sentry, Архитектура микросервисов и PaaS Briefcase, Подготовка к Офферу и Экватору и др.) и автономный **Deep Cognitive Synthesizer (`fallback_service.py`)**.
@@ -84,7 +98,7 @@
   * Детекция **SQL-инъекций** (конкатенация строк в SQL-запросах вместо параметризованных плейсхолдеров `$1, $2`).
   * Выявление **Race Conditions** (конкурентная запись в `map` или разделяемую память без `sync.Mutex` / каналов в горутинах).
   * Контроль **10 золотых правил инженерии Авито и ZBP:** потеря `context.WithTimeout` при вызовах БД/HTTP, вызов `panic()` в продакшене, игнорирование ошибок `_ = err` и отсутствие обёртки `fmt.Errorf("%w", err)`, проблема **N+1 запросов в цикле**, `SELECT *` без `LIMIT`, утечки транзакций без `defer tx.Rollback()`, хардкод секретов и токенов.
-* **Интерактивный IDE-интерфейс:** нумерация строк, пресеты кода (с багами, синтаксической ошибкой, идеальный по ZBP), вкладка со всеми замечаниями и диффами, а также вкладка **«Исправленный код от AI»** с готовым к PR рефакторингом в 1 клик.
+* **Интерактивный IDE-интерфейс:** нумерация строк, готовые пресеты кода (код с уязвимостями/багами и эталонный код «Эталон (Clean ZBP)» с оценкой 100/100), вкладка со всеми замечаниями и диффами, а также вкладка **«Исправленный код от AI»** с готовым к PR рефакторингом в 1 клик.
 
 ### 3. Command Palette (`Ctrl+K` / `Cmd+K`) и Toast Hub
 * **Глобальная палитра команд (`Ctrl+K`):** мгновенный вызов из любой точки интерфейса для переключения между 6 вкладками, смены ролевой персоны (Стажёр / Наставник / Тимлид), запуска быстрых ИИ-промптов и перехода к задачам чек-листа с полной клавиатурной навигацией (`↑`/`↓`/`Enter`/`Esc`).

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { UserGamificationProfile } from '../types';
 import { getGamificationProfile } from '../api/client';
 import {
@@ -53,6 +54,20 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
     };
     fetchProfile();
   }, [userId]);
+
+  useEffect(() => {
+    if (!selectedBadge) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedBadge(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedBadge]);
 
   const triggerCelebrate = () => {
     setCelebrate(true);
@@ -447,94 +462,102 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
         </div>
       )}
 
-      {/* Selected Badge Inspection Modal (Liquid Glass High-Elevation Tier 6) */}
-      {selectedBadge && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
-          onClick={() => setSelectedBadge(null)}
-        >
+      {/* Selected Badge Inspection Modal — Portaled to document.body */}
+      {selectedBadge &&
+        createPortal(
           <div
-            data-testid="badge-detail-modal"
-            onClick={(e) => e.stopPropagation()}
-            className="glass-modal glass-panel specular-inset-strong relative w-[94vw] max-w-lg max-h-[88dvh] flex flex-col rounded-3xl p-5 sm:p-6 border border-white/20 shadow-2xl space-y-4 overflow-y-auto glass-scrollbar"
+            data-testid="badge-detail-modal-backdrop"
+            className="fixed inset-0 z-[120] glass-backdrop bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+            onClick={() => setSelectedBadge(null)}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg shrink-0 specular-inset">
-                  {renderBadgeIcon(selectedBadge.icon)}
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-brand-blue block">
-                    {selectedBadge.category}
-                  </span>
-                  <h3 className="text-sm sm:text-base font-black text-glass-pure leading-snug">
-                    {selectedBadge.title}
-                  </h3>
-                  <span className="inline-block mt-0.5 text-xs font-extrabold text-brand-green">
-                    +{selectedBadge.xp} XP
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                data-testid="close-badge-modal-btn"
-                onClick={() => setSelectedBadge(null)}
-                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl glass-pill text-glass-secondary hover:text-white transition-colors cursor-pointer shrink-0"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-black/45 border border-white/10 text-xs text-glass-primary leading-relaxed space-y-2.5">
-              <p className="font-semibold text-glass-pure">{selectedBadge.description}</p>
-              <div className="pt-2.5 border-t border-white/10 text-[11px] text-glass-secondary space-y-1.5">
-                <p>
-                  <strong className="text-glass-pure">Статус:</strong>{' '}
-                  {selectedBadge.unlocked ? (
-                    <span className="text-brand-green font-bold">
-                      ✓ Получено ({formatBadgeDate(selectedBadge.unlocked_at)})
+            <div
+              data-testid="badge-detail-modal"
+              onClick={(e) => e.stopPropagation()}
+              className="glass-panel glass-modal specular-inset-strong w-full max-w-lg max-h-[86dvh] flex flex-col rounded-2xl border border-white/20 overflow-hidden shadow-2xl my-auto"
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between gap-3 p-4 sm:p-5 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg shrink-0 specular-inset">
+                    {renderBadgeIcon(selectedBadge.icon)}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-brand-blue block">
+                      {selectedBadge.category}
                     </span>
-                  ) : (
-                    <span className="text-amber-400 font-bold">
-                      В процессе выполнения ({selectedBadge.progress}%)
+                    <h3 className="text-sm sm:text-base font-black text-glass-pure leading-snug">
+                      {selectedBadge.title}
+                    </h3>
+                    <span className="inline-block mt-0.5 text-xs font-extrabold text-brand-green">
+                      +{selectedBadge.xp} XP
                     </span>
-                  )}
-                </p>
-                <p>
-                  <strong className="text-glass-pure">Ценность для AvitoTech:</strong> Закрепление стандартов надёжности, снижение Time-to-First-PR и самостоятельность в фичах сервиса.
-                </p>
-              </div>
-            </div>
+                  </div>
+                </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-              {onAskAI && (
                 <button
                   type="button"
-                  onClick={() => {
-                    onAskAI(
-                      `Как быстрее получить бейдж «${selectedBadge.title}» в Авито и что для этого нужно сделать?`
-                    );
-                    setSelectedBadge(null);
-                  }}
-                  className="min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold bg-[#00AAFF]/20 border border-[#00AAFF]/40 text-brand-blue hover:text-white flex items-center gap-1.5 cursor-pointer transition-all"
+                  data-testid="close-badge-modal-btn"
+                  onClick={() => setSelectedBadge(null)}
+                  className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl glass-pill text-glass-secondary hover:text-white transition-colors cursor-pointer shrink-0"
                 >
-                  <Sparkles size={14} />
-                  <span>Спросить совет у AI</span>
+                  <X size={18} />
                 </button>
-              )}
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedBadge(null)}
-                className="min-h-[44px] px-5 py-2 rounded-xl text-xs font-bold glass-pill text-white cursor-pointer ml-auto"
-              >
-                Закрыть
-              </button>
+              {/* Scrollable Modal Body */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain glass-scrollbar p-4 sm:p-5 space-y-3.5">
+                <div className="p-4 rounded-2xl bg-black/45 border border-white/10 text-xs text-glass-primary leading-relaxed space-y-2.5">
+                  <p className="font-semibold text-glass-pure">{selectedBadge.description}</p>
+                  <div className="pt-2.5 border-t border-white/10 text-[11px] text-glass-secondary space-y-1.5">
+                    <p>
+                      <strong className="text-glass-pure">Статус:</strong>{' '}
+                      {selectedBadge.unlocked ? (
+                        <span className="text-brand-green font-bold">
+                          ✓ Получено ({formatBadgeDate(selectedBadge.unlocked_at)})
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-bold">
+                          В процессе выполнения ({selectedBadge.progress}%)
+                        </span>
+                      )}
+                    </p>
+                    <p>
+                      <strong className="text-glass-pure">Ценность для AvitoTech:</strong> Закрепление стандартов надёжности, снижение Time-to-First-PR и самостоятельность в фичах сервиса.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 sm:px-5 sm:py-3.5 border-t border-white/10 bg-slate-950/50 shrink-0">
+                {onAskAI && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAskAI(
+                        `Как быстрее получить бейдж «${selectedBadge.title}» в Авито и что для этого нужно сделать?`
+                      );
+                      setSelectedBadge(null);
+                    }}
+                    className="min-h-[42px] sm:min-h-[36px] px-4 py-2 rounded-xl text-xs font-bold bg-[#00AAFF]/20 border border-[#00AAFF]/40 text-brand-blue hover:text-white flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <Sparkles size={14} />
+                    <span>Спросить совет у AI</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBadge(null)}
+                  className="min-h-[42px] sm:min-h-[36px] px-5 py-2 rounded-xl text-xs font-bold glass-pill text-white cursor-pointer ml-auto"
+                >
+                  Закрыть
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
