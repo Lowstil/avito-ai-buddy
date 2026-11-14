@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import type { AccessItem, UserProfile } from '../types';
-import { Shield, CheckCircle2, Clock, Plus, Sparkles, Terminal, Database, Server, GitBranch, Lock, Key } from 'lucide-react';
+import {
+  Shield,
+  CheckCircle2,
+  Clock,
+  Plus,
+  Sparkles,
+  Terminal,
+  Database,
+  Server,
+  GitBranch,
+  Lock,
+  Key,
+  Layers
+} from 'lucide-react';
 
 interface AccessViewProps {
   accessList: AccessItem[];
@@ -22,186 +35,271 @@ export const AccessView: React.FC<AccessViewProps> = ({
 
   const getIcon = (key: string) => {
     switch (key) {
-      case 'vpn_corp': return Shield;
-      case 'gitlab_avito': return GitBranch;
-      case 'lens_k8s': return Server;
-      case 'spt_cluster': return Database;
-      case 'grafana_metrics': return Terminal;
-      default: return Key;
+      case 'vpn_corp':
+        return Shield;
+      case 'gitlab_avito':
+        return GitBranch;
+      case 'lens_k8s':
+        return Server;
+      case 'spt_cluster':
+      case 'postgres_ro':
+        return Database;
+      case 'grafana_metrics':
+        return Terminal;
+      case 'kafka_topics':
+        return Layers;
+      default:
+        return Key;
     }
   };
 
-  const filteredList = accessList.filter(item => {
+  const filteredList = accessList.filter((item) => {
     if (filter === 'active') return item.status === 'active';
     if (filter === 'requested') return item.status === 'requested';
     if (filter === 'not_requested') return item.status === 'not_requested';
     return true;
   });
 
+  const activeCount = accessList.filter((i) => i.status === 'active').length;
+  const requestedCount = accessList.filter((i) => i.status === 'requested').length;
+  const availableCount = accessList.filter((i) => i.status === 'not_requested').length;
+
   return (
-    <div className="space-y-6">
-      
-      {/* Top Banner */}
-      <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#965EEB]"></span>
-            <h2 className="text-xl font-black text-white">
-              {isMentorOrLead ? 'Управление доступами стажёра: Арсений Новиков (Backend)' : 'Доступы и рабочие инструменты'}
+    <div data-testid="access-view" className="space-y-4 w-full max-w-full overflow-x-hidden">
+      {/* Compact Liquid Glass Header Banner */}
+      <div className="glass-panel specular-inset rounded-3xl p-4 sm:p-5 border border-white/15 relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+        <div className="laser-line-spectrum absolute top-0 inset-x-0 opacity-70 pointer-events-none" />
+
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#965EEB] glow-purple shrink-0"></span>
+            <h2 className="text-base sm:text-lg font-black text-glass-pure truncate">
+              {isMentorOrLead
+                ? 'Управление доступами стажёра: Арсений Новиков (Backend)'
+                : 'Доступы и рабочие инструменты (RBAC Matrix)'}
             </h2>
           </div>
-          <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-            В Авито действует строгая политика безопасности (Zero Trust & Least Privilege). Стажёр отправляет запрос в ServiceDesk, а выдачу подтверждает наставник или тимлид.
+          <p className="text-xs text-glass-secondary max-w-3xl leading-relaxed">
+            В Авито действует строгая политика безопасности (<strong className="text-white">Zero Trust & Least Privilege</strong>). Стажёр отправляет запрос в ServiceDesk в 1 клик, а выдачу подтверждает наставник или тимлид.
           </p>
         </div>
 
-        <button
-          onClick={() => onAskBuddy('Какие доступы мне нужны в первую неделю стажировки и как их заказать?')}
-          className="px-4 py-2.5 rounded-2xl glass-pill text-white font-bold text-xs hover:border-[#965EEB]/50 transition-all flex items-center gap-2 cursor-pointer shrink-0"
-        >
-          <Sparkles size={14} className="text-[#965EEB]" />
-          Подобрать доступы с AI-buddy
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {/* Quick Status Counters */}
+          <div className="hidden sm:flex items-center gap-2 glass-card px-3 py-1.5 rounded-2xl border border-white/12 text-[11px]">
+            <span className="flex items-center gap-1 text-[#04E061] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#04E061] shadow-[0_0_6px_#04E061]" />
+              {activeCount} активны
+            </span>
+            <span className="text-white/20">•</span>
+            <span className="flex items-center gap-1 text-[#b085f5] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#965EEB] shadow-[0_0_6px_#965EEB]" />
+              {requestedCount} в очереди
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              onAskBuddy('Какие доступы мне нужны в первую неделю стажировки и как их заказать?')
+            }
+            className="min-h-[44px] sm:min-h-[38px] px-4 py-2 rounded-2xl glass-pill text-white font-bold text-xs hover:border-[#965EEB]/60 transition-all flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Sparkles size={14} className="text-[#b085f5] shrink-0" />
+            <span>Подобрать доступы с AI-buddy</span>
+          </button>
+        </div>
       </div>
 
-      {/* RBAC Notice Banner */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-300">
-        <div className="flex items-center gap-2.5">
-          <Lock size={16} className={isMentorOrLead ? "text-[#04E061]" : "text-[#00AAFF]"} />
-          <span>
+      {/* RBAC Notice & Filter Bar */}
+      <div className="glass-panel specular-inset rounded-2xl p-3 sm:p-3.5 border border-white/12 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="flex items-start sm:items-center gap-2.5 text-glass-secondary min-w-0">
+          <div
+            className={`p-1.5 rounded-xl shrink-0 border ${
+              isMentorOrLead
+                ? 'bg-emerald-500/15 border-emerald-500/30 text-[#04E061]'
+                : 'bg-blue-500/15 border-blue-500/30 text-[#00AAFF]'
+            }`}
+          >
+            <Lock size={15} />
+          </div>
+          <span className="leading-relaxed">
             {isMentorOrLead ? (
               <span>
-                Режим администратора: Вы вошли как <strong>{currentUser.name}</strong> ({currentUser.role === 'mentor' ? 'Наставник' : 'Тимлид'}). Вы утверждаете выдачу доступов для стажёра <strong>Арсения Новикова</strong>.
+                Режим администратора: Вы вошли как <strong className="text-white">{currentUser.name}</strong> (
+                {currentUser.role === 'mentor' ? 'Наставник' : 'Тимлид'}). Вы утверждаете выдачу доступов для стажёра{' '}
+                <strong className="text-white">Арсения Новикова</strong>.
               </span>
             ) : (
               <span>
-                Режим стажёра: Вы вошли как <strong>{currentUser.name}</strong>. Вы можете только <strong>запрашивать доступы</strong>. Подтверждение выдачи доступно исключительно наставнику и тимлиду.
+                Режим стажёра: Вы вошли как <strong className="text-white">{currentUser.name}</strong>. Вы можете только{' '}
+                <strong className="text-[#00AAFF]">запрашивать доступы</strong>. Подтверждение выдачи доступно наставнику и тимлиду.
               </span>
             )}
           </span>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-xl shrink-0 border border-white/5">
+        {/* Filter Pills with Mobile Overflow Containment */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 pb-0.5 sm:pb-0">
           <button
+            type="button"
             onClick={() => setFilter('all')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
-              filter === 'all' ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+            className={`min-h-[40px] sm:min-h-[32px] px-3 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+              filter === 'all'
+                ? 'bg-white/20 text-white border border-white/30 shadow-sm'
+                : 'text-glass-muted hover:text-white hover:bg-white/5'
             }`}
           >
             Все ({accessList.length})
           </button>
           <button
+            type="button"
             onClick={() => setFilter('requested')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
-              filter === 'requested' ? 'bg-purple-500/30 text-purple-200' : 'text-slate-400 hover:text-purple-300'
+            className={`min-h-[40px] sm:min-h-[32px] px-3 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1 ${
+              filter === 'requested'
+                ? 'bg-purple-500/25 text-[#b085f5] border border-purple-400/50 glow-purple'
+                : 'text-glass-muted hover:text-[#b085f5] hover:bg-white/5'
             }`}
           >
-            Запрошены ({accessList.filter(i => i.status === 'requested').length})
+            <Clock size={11} />
+            <span>Запрошены ({requestedCount})</span>
           </button>
           <button
+            type="button"
             onClick={() => setFilter('active')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors ${
-              filter === 'active' ? 'bg-emerald-500/30 text-emerald-200' : 'text-slate-400 hover:text-emerald-300'
+            className={`min-h-[40px] sm:min-h-[32px] px-3 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1 ${
+              filter === 'active'
+                ? 'bg-emerald-500/25 text-[#04E061] border border-emerald-400/50 glow-green'
+                : 'text-glass-muted hover:text-[#04E061] hover:bg-white/5'
             }`}
           >
-            Активны ({accessList.filter(i => i.status === 'active').length})
+            <CheckCircle2 size={11} />
+            <span>Активны ({activeCount})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('not_requested')}
+            className={`min-h-[40px] sm:min-h-[32px] px-3 py-1 rounded-xl text-[11px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+              filter === 'not_requested'
+                ? 'bg-blue-500/25 text-[#00AAFF] border border-blue-400/50 glow-blue'
+                : 'text-glass-muted hover:text-[#00AAFF] hover:bg-white/5'
+            }`}
+          >
+            Доступны ({availableCount})
           </button>
         </div>
       </div>
 
-      {/* Grid of Tools */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Balanced 3x2 Multi-Column Grid on 1920x1080 Desktop & Responsive Mobile Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
         {filteredList.map((item) => {
           const Icon = getIcon(item.system_key);
           return (
             <div
               key={item.id}
-              className={`glass-card p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+              data-testid={`access-card-${item.system_key}`}
+              className={`glass-card glass-card-interactive glass-specular specular-inset p-4 rounded-2xl border transition-all flex flex-col justify-between relative overflow-hidden ${
                 item.status === 'active'
-                  ? 'border-emerald-500/30 bg-emerald-950/15'
+                  ? 'border-neon-green bg-emerald-950/15'
                   : item.status === 'requested'
-                  ? 'border-purple-500/30 bg-purple-950/15'
-                  : 'border-white/10'
+                  ? 'border-neon-purple bg-purple-950/15'
+                  : 'border-white/12 hover:border-[#00AAFF]/50'
               }`}
             >
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#965EEB]">
-                    <Icon size={20} />
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${
+                      item.status === 'active'
+                        ? 'bg-[#04E061]/15 border-[#04E061]/40 text-[#04E061] shadow-[0_0_12px_rgba(4,224,97,0.2)]'
+                        : item.status === 'requested'
+                        ? 'bg-[#965EEB]/15 border-[#965EEB]/40 text-[#b085f5] shadow-[0_0_12px_rgba(150,94,235,0.2)]'
+                        : 'bg-[#00AAFF]/15 border-[#00AAFF]/30 text-[#00AAFF]'
+                    }`}
+                  >
+                    <Icon size={18} />
                   </div>
+
+                  {/* Neon Status Indicator Badges */}
                   {item.status === 'active' && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold flex items-center gap-1 border border-emerald-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-[#04E061] text-[11px] font-extrabold flex items-center gap-1 border border-emerald-500/40 shadow-[0_0_10px_rgba(4,224,97,0.2)]">
                       <CheckCircle2 size={12} /> Активен
                     </span>
                   )}
                   {item.status === 'requested' && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[11px] font-bold flex items-center gap-1 border border-purple-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-[#b085f5] text-[11px] font-extrabold flex items-center gap-1 border border-purple-500/40 shadow-[0_0_10px_rgba(150,94,235,0.2)]">
                       <Clock size={12} /> Запрошен
                     </span>
                   )}
                   {item.status === 'not_requested' && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-slate-500/20 text-slate-400 text-[11px] font-semibold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/[0.06] text-glass-secondary border border-white/15 text-[11px] font-bold">
                       Не подключен
                     </span>
                   )}
                 </div>
 
-                <h4 className="text-sm font-extrabold text-white mb-1.5">{item.system_name}</h4>
-                <p className="text-xs text-slate-400 leading-relaxed mb-4">{item.description}</p>
+                <h4 className="text-sm font-black text-glass-pure mb-1">{item.system_name}</h4>
+                <p className="text-xs text-glass-secondary leading-relaxed mb-3 line-clamp-2">
+                  {item.description}
+                </p>
               </div>
 
-              {/* Action Button strictly respecting RBAC */}
-              <div className="pt-3 border-t border-white/10">
+              {/* Action Button strictly respecting RBAC & Touch Targets (>= 44px on mobile) */}
+              <div className="pt-2.5 border-t border-white/10">
                 {/* 1. Item is active */}
                 {item.status === 'active' && (
-                  <div className="flex items-center justify-center gap-1.5 py-1 text-emerald-400 text-xs font-bold">
-                    <CheckCircle2 size={14} />
+                  <div className="min-h-[44px] sm:min-h-[36px] flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[#04E061] text-xs font-extrabold">
+                    <CheckCircle2 size={14} className="shrink-0" />
                     <span>Доступ готов к работе</span>
                   </div>
                 )}
 
                 {/* 2. Item is requested: ONLY mentor or lead can approve! Intern CANNOT grant! */}
-                {item.status === 'requested' && (
-                  isMentorOrLead ? (
+                {item.status === 'requested' &&
+                  (isMentorOrLead ? (
                     <button
+                      type="button"
                       onClick={() => onGrantAccess(item.system_key)}
-                      className="w-full py-2 rounded-xl bg-[#04E061] text-slate-950 font-bold text-xs hover:bg-[#03c754] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                      className="w-full min-h-[44px] sm:min-h-[36px] py-2 px-3 rounded-xl bg-[#04E061] text-slate-950 font-extrabold text-xs hover:bg-[#03c754] transition-all flex items-center justify-center gap-1.5 cursor-pointer glow-green"
                     >
-                      <CheckCircle2 size={14} /> Подтвердить выдачу (Наставник)
+                      <CheckCircle2 size={14} className="shrink-0" />
+                      <span>Подтвердить выдачу (Наставник)</span>
                     </button>
                   ) : (
-                    <div className="w-full py-2 px-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs text-center font-medium flex items-center justify-center gap-1.5">
-                      <Clock size={13} className="text-purple-400 shrink-0" />
+                    <div className="w-full min-h-[44px] sm:min-h-[36px] py-2 px-3 rounded-xl bg-purple-500/15 border border-purple-500/30 text-[#b085f5] text-xs text-center font-bold flex items-center justify-center gap-1.5">
+                      <Clock size={13} className="text-[#b085f5] shrink-0 animate-pulse" />
                       <span>Ожидает одобрения наставником</span>
                     </div>
-                  )
-                )}
+                  ))}
 
                 {/* 3. Item is not requested */}
-                {item.status === 'not_requested' && (
-                  isMentorOrLead ? (
+                {item.status === 'not_requested' &&
+                  (isMentorOrLead ? (
                     <button
+                      type="button"
                       onClick={() => onGrantAccess(item.system_key)}
-                      className="w-full py-2 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20 transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-white/10"
+                      className="w-full min-h-[44px] sm:min-h-[36px] py-2 px-3 rounded-xl glass-pill text-white font-extrabold text-xs hover:border-[#04E061]/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Plus size={14} /> Выдать превентивно
+                      <Plus size={14} className="text-[#04E061] shrink-0" />
+                      <span>Выдать превентивно</span>
                     </button>
                   ) : (
                     <button
-                      onClick={() => onRequestAccess(item.system_key, "Необходимо для задач стажировки")}
-                      className="w-full py-2 rounded-xl bg-[#00AAFF] text-white font-bold text-xs hover:bg-[#0090dd] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                      type="button"
+                      onClick={() =>
+                        onRequestAccess(item.system_key, 'Необходимо для задач стажировки')
+                      }
+                      className="w-full min-h-[44px] sm:min-h-[36px] py-2 px-3 rounded-xl bg-[#00AAFF] text-white font-extrabold text-xs hover:bg-[#0090dd] transition-all flex items-center justify-center gap-1.5 cursor-pointer glow-blue"
                     >
-                      <Plus size={14} /> Запросить доступ в 1 клик
+                      <Plus size={14} className="shrink-0" />
+                      <span>Запросить доступ в 1 клик</span>
                     </button>
-                  )
-                )}
+                  ))}
               </div>
             </div>
           );
         })}
       </div>
-
     </div>
   );
 };

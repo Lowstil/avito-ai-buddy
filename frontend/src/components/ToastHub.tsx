@@ -17,7 +17,7 @@ export const ToastHub: React.FC<ToastHubProps> = ({ toasts, onDismiss }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full">
+    <div className="fixed top-3 inset-x-3 sm:top-5 sm:right-5 sm:inset-x-auto sm:max-w-sm w-auto sm:w-full z-50 flex flex-col gap-2.5 pointer-events-none">
       {toasts.map((toast) => {
         const isXp = toast.type === 'xp';
         const isSuccess = toast.type === 'success';
@@ -26,14 +26,14 @@ export const ToastHub: React.FC<ToastHubProps> = ({ toasts, onDismiss }) => {
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl border backdrop-blur-2xl shadow-2xl transition-all duration-300 animate-slide-in-right ${
+            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl glass-modal border backdrop-blur-2xl transition-all duration-300 animate-slide-in-right ${
               isXp
-                ? 'bg-gradient-to-r from-emerald-950/80 to-slate-900/90 border-[#04E061]/50 shadow-[0_0_25px_rgba(4,224,97,0.25)]'
+                ? 'bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-slate-900/90 border-[#04E061]/50 shadow-[0_0_25px_rgba(4,224,97,0.25)]'
                 : isSuccess
-                ? 'bg-slate-900/90 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                ? 'bg-slate-900/90 border-[#04E061]/50 shadow-[0_0_25px_rgba(4,224,97,0.25)]'
                 : isWarning
-                ? 'bg-slate-900/90 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
-                : 'bg-slate-900/90 border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                ? 'bg-slate-900/90 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                : 'bg-slate-900/90 border-[#00AAFF]/50 shadow-[0_0_20px_rgba(0,170,255,0.2)]'
             }`}
           >
             <div className="shrink-0 mt-0.5">
@@ -59,8 +59,9 @@ export const ToastHub: React.FC<ToastHubProps> = ({ toasts, onDismiss }) => {
             <button
               onClick={() => onDismiss(toast.id)}
               className="shrink-0 text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5"
+              title="Закрыть"
             >
-              <X size={14} />
+              <X size={14} className="lucide-x" />
             </button>
           </div>
         );

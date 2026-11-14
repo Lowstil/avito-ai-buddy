@@ -199,83 +199,96 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="glass-panel p-6 rounded-3xl border border-white/10 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-[#04E061] to-[#00AAFF] text-slate-950 font-black shadow-lg shadow-emerald-500/20">
-              <Terminal size={24} />
+    <div className="space-y-3 sm:space-y-4 w-full min-w-0" data-testid="code-review-playground">
+      {/* Top Liquid Glass Header Banner */}
+      <div className="glass-panel specular-inset p-4 sm:p-5 rounded-3xl border border-white/10 relative overflow-hidden">
+        <div className="laser-line-spectrum absolute top-0 inset-x-0 opacity-70 pointer-events-none" />
+
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 relative z-10">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-tr from-[#04E061] to-[#00AAFF] text-slate-950 font-black shadow-lg glow-green shrink-0">
+              <Terminal size={20} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black text-white tracking-tight">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-base sm:text-lg font-black text-glass-pure tracking-tight">
                   Pre-flight Code Review Playground
                 </h1>
-                <span className="px-2 py-0.5 rounded-md bg-[#04E061]/20 text-[#04E061] font-bold text-[10px] border border-[#04E061]/40">
+                <span className="px-2 py-0.5 rounded-full bg-[#04E061]/20 text-brand-green font-bold text-[10px] border border-[#04E061]/40 specular-inset shrink-0">
                   AI-ANALYZER
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-1">
+              <p className="text-[11px] sm:text-xs text-glass-secondary mt-0.5 leading-snug">
                 Интеллектуальный статический аудит кода перед отправкой в ревью наставнику. Проверяет 10 золотых правил инженерии Авито и Zero Bug Policy.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-slate-400 font-semibold mr-1">Пресеты:</span>
+          {/* Preset Selector Pills (Horizontal Scroll on Mobile, Clean Wrap on Desktop) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 xl:pb-0 max-w-full shrink-0">
+            <span className="text-[11px] text-glass-muted font-semibold mr-1 shrink-0">Пресеты:</span>
             <button
+              type="button"
+              data-testid="preset-bad-go"
               onClick={() => {
                 setCode(SAMPLE_BAD_GO);
                 setLanguage('go');
                 setResult(null);
                 if (onShowToast) onShowToast('Загружен демо-код на Go с ошибками ZBP', 'info');
               }}
-              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-rose-300 border border-rose-500/30 hover:border-rose-500/60 transition-all cursor-pointer font-medium"
+              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-rose-300 border border-rose-500/30 hover:border-rose-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
             >
               Go: Ошибки ZBP
             </button>
             <button
+              type="button"
+              data-testid="preset-clean-go"
               onClick={() => {
                 setCode(SAMPLE_CLEAN_GO);
                 setLanguage('go');
                 setResult(null);
                 if (onShowToast) onShowToast('Загружен чистый эталонный код на Go', 'success');
               }}
-              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 transition-all cursor-pointer font-medium"
+              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
             >
               Go: Чистый ZBP
             </button>
             <button
+              type="button"
+              data-testid="preset-invalid-py"
               onClick={() => {
                 setCode('ddd');
                 setLanguage('python');
                 setResult(null);
                 if (onShowToast) onShowToast('Загружен некорректный фрагмент "ddd" (тест блокировки)', 'warning');
               }}
-              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-all cursor-pointer font-medium"
+              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
             >
               Python: Невалидный "ddd"
             </button>
             <button
+              type="button"
+              data-testid="preset-bad-py"
               onClick={() => {
                 setCode(SAMPLE_BAD_PY);
                 setLanguage('python');
                 setResult(null);
                 if (onShowToast) onShowToast('Загружен код на Python с нарушениями таймаутов', 'info');
               }}
-              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-purple-300 border border-purple-500/30 hover:border-purple-500/60 transition-all cursor-pointer font-medium"
+              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-purple-300 border border-purple-500/30 hover:border-purple-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
             >
               Python: Без таймаута
             </button>
             <button
+              type="button"
+              data-testid="preset-clean-py"
               onClick={() => {
                 setCode(SAMPLE_CLEAN_PY);
                 setLanguage('python');
                 setResult(null);
                 if (onShowToast) onShowToast('Загружен чистый код на Python по стандартам Авито', 'success');
               }}
-              className="px-2.5 py-1.5 rounded-xl glass-card text-xs text-teal-300 border border-teal-500/30 hover:border-teal-500/60 transition-all cursor-pointer font-medium"
+              className="px-3 py-1.5 min-h-[34px] rounded-xl glass-pill text-xs text-teal-300 border border-teal-500/30 hover:border-teal-500/60 transition-all cursor-pointer font-medium whitespace-nowrap shrink-0"
             >
               Python: Чистый ZBP
             </button>
@@ -283,30 +296,49 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
         </div>
       </div>
 
-      {/* Main 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Code Editor (7 cols) */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="glass-panel p-4 rounded-3xl border border-white/10 space-y-3">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Code size={16} className="text-[#04E061]" />
-                <span className="text-xs font-bold text-white">Редактор кода (Go / Python):</span>
+      {/* Main 2-Column Balanced Split Grid (1920x1080 side-by-side, Mobile stacked) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* Left Column: Glassy Code Editor (6 cols on lg+) */}
+        <div className="lg:col-span-6 flex flex-col min-w-0">
+          <div className="glass-panel specular-inset p-3.5 sm:p-4 rounded-3xl border border-white/10 flex flex-col justify-between h-full space-y-3">
+            {/* macOS Window Dots + Language Switcher Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-1.5 shrink-0" aria-hidden="true">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF5252] shadow-[0_0_6px_rgba(255,82,82,0.7)]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#04E061] shadow-[0_0_6px_rgba(4,224,97,0.7)]" />
+                </div>
+                <div className="h-3.5 w-[1px] bg-white/10 shrink-0" />
+                <div className="flex items-center gap-1.5 truncate">
+                  <Code size={15} className="text-brand-green shrink-0" />
+                  <span className="text-xs font-bold text-glass-pure truncate">
+                    Редактор кода ({language === 'go' ? 'delivery.go' : 'delivery.py'})
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
+              <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10 specular-inset shrink-0">
                 <button
+                  type="button"
+                  data-testid="lang-switch-go"
                   onClick={() => setLanguage('go')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    language === 'go' ? 'bg-[#00AAFF] text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                    language === 'go'
+                      ? 'bg-[#00AAFF] text-slate-950 shadow glow-blue'
+                      : 'text-glass-muted hover:text-white'
                   }`}
                 >
                   Go (Golang)
                 </button>
                 <button
+                  type="button"
+                  data-testid="lang-switch-python"
                   onClick={() => setLanguage('python')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    language === 'python' ? 'bg-[#965EEB] text-white shadow' : 'text-slate-400 hover:text-white'
+                    language === 'python'
+                      ? 'bg-[#965EEB] text-white shadow glow-purple'
+                      : 'text-glass-muted hover:text-white'
                   }`}
                 >
                   Python
@@ -314,31 +346,35 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
               </div>
             </div>
 
-            {/* IDE Line Numbers Gutter + Editor */}
-            <div className="relative flex rounded-2xl bg-black/60 border border-white/10 overflow-hidden focus-within:border-[#04E061] transition-all">
-              <div className="py-4 pl-3 pr-2.5 bg-black/40 border-r border-white/5 select-none text-right font-mono text-xs text-slate-600 leading-relaxed shrink-0">
+            {/* IDE Line Numbers Gutter + Bounded Scrollable Code Editor */}
+            <div className="relative flex rounded-2xl bg-[#060911]/90 border border-white/10 overflow-hidden focus-within:border-[#04E061]/70 focus-within:shadow-[0_0_20px_rgba(4,224,97,0.15)] transition-all">
+              <div className="py-3.5 pl-2.5 pr-2 bg-black/50 border-r border-white/5 select-none text-right font-mono text-[11px] text-slate-500 leading-relaxed shrink-0">
                 {code.split('\n').map((_, i) => (
                   <div key={i}>{i + 1}</div>
                 ))}
               </div>
               <textarea
+                data-testid="code-review-textarea"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Вставьте код микросервиса для анализа на соответствие стандартам Авито..."
-                className="w-full h-[480px] bg-transparent p-4 font-mono text-xs text-slate-200 outline-none resize-none leading-relaxed"
+                className="w-full h-[280px] sm:h-[360px] lg:h-[400px] max-h-[460px] bg-transparent p-3.5 font-mono text-xs text-slate-100 outline-none resize-none leading-relaxed glass-scrollbar overflow-y-auto"
                 spellCheck={false}
               />
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[11px] text-slate-400">
-                Строк: {code.split('\n').length} • Проверка: Context, Panics, Limits, Rollbacks, %w
+            {/* Bottom Action Bar with >= 44px Touch-Friendly Run Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+              <p className="text-[11px] text-glass-muted truncate">
+                Строк: <strong className="text-glass-secondary">{code.split('\n').length}</strong> • Проверка: Context, Panics, Limits, Rollbacks, %w
               </p>
 
               <button
+                type="button"
+                data-testid="run-code-review-btn"
                 onClick={handleAnalyze}
                 disabled={isLoading || !code.trim()}
-                className="px-5 py-2.5 rounded-xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#04E061] to-[#00AAFF] hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="min-h-[44px] w-full sm:w-auto px-5 py-2.5 rounded-2xl font-black text-xs text-slate-950 bg-gradient-to-r from-[#04E061] to-[#00AAFF] hover:brightness-110 active:scale-95 transition-all shadow-lg glow-green flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
               >
                 {isLoading ? (
                   <>
@@ -347,8 +383,8 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                   </>
                 ) : (
                   <>
-                    <Play size={14} fill="currentColor" />
-                    <span>Запустить AI-Анализ</span>
+                    <Play size={15} fill="currentColor" />
+                    <span>Запустить AI-Анализ (Code Review)</span>
                   </>
                 )}
               </button>
@@ -356,129 +392,185 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
           </div>
         </div>
 
-        {/* Right Column: AI Analysis & Multi-Issue Breakdown (6 cols) */}
-        <div className="lg:col-span-6 space-y-4">
+        {/* Right Column: AI Review Verdict & Scrollable Multi-Issue Breakdown (6 cols on lg+) */}
+        <div className="lg:col-span-6 flex flex-col min-w-0">
           {!result && !isLoading && (
-            <div className="glass-panel p-8 rounded-3xl border border-white/10 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-white/5 flex items-center justify-center text-slate-500">
-                <Code size={32} />
+            <div className="glass-panel specular-inset p-6 sm:p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center h-full min-h-[300px] lg:min-h-[490px] space-y-3.5">
+              <div className="w-16 h-16 mx-auto rounded-2xl glass-pill flex items-center justify-center text-brand-blue glow-blue">
+                <Code size={30} />
               </div>
-              <h3 className="text-sm font-bold text-white">Код ещё не проанализирован</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+              <h3 className="text-sm sm:text-base font-bold text-glass-pure">
+                Код ещё не проанализирован
+              </h3>
+              <p className="text-xs text-glass-secondary max-w-md mx-auto leading-relaxed">
                 Нажмите кнопку «Запустить AI-Анализ», чтобы проверить все замечания по Zero Bug Policy, получить оценку чистоты кода и сгенерировать исправленный вариант.
               </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <span className="px-2.5 py-1 rounded-full glass-pill text-[10px] font-semibold text-glass-muted">
+                  🛡️ Zero Bug Policy
+                </span>
+                <span className="px-2.5 py-1 rounded-full glass-pill text-[10px] font-semibold text-glass-muted">
+                  ⚡ Context & Timeouts
+                </span>
+                <span className="px-2.5 py-1 rounded-full glass-pill text-[10px] font-semibold text-glass-muted">
+                  🔍 SQL Limit & Error %w
+                </span>
+              </div>
             </div>
           )}
 
           {isLoading && (
-            <div className="glass-panel p-8 rounded-3xl border border-white/10 text-center space-y-4 animate-pulse">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-[#04E061]/20 border border-[#04E061]/40 flex items-center justify-center text-[#04E061]">
-                <Sparkles size={32} className="animate-spin" />
+            <div className="glass-panel specular-inset p-6 sm:p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center h-full min-h-[300px] lg:min-h-[490px] space-y-4 animate-pulse">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-[#04E061]/20 border border-[#04E061]/40 flex items-center justify-center text-brand-green glow-green">
+                <Sparkles size={30} className="animate-spin" />
               </div>
-              <h3 className="text-sm font-bold text-white">Глубокий анализ кода по 10 правилам инженерии Авито...</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-sm sm:text-base font-bold text-glass-pure">
+                Глубокий анализ кода по 10 правилам инженерии Авито...
+              </h3>
+              <p className="text-xs text-glass-secondary max-w-sm mx-auto">
                 ИИ проверяет проброс контекстов, таймауты сокетов, N+1 выборки, паники и соответствие Zero Bug Policy.
               </p>
             </div>
           )}
 
           {result && (
-            <div className="space-y-4">
+            <div className="glass-panel specular-inset p-3.5 sm:p-4 rounded-3xl border border-white/10 flex flex-col space-y-3 lg:max-h-[515px] overflow-y-auto glass-scrollbar">
               {/* Prominent Red Compiler / Syntax Error Banner */}
-              {(result.status === 'blocked' && (result.score === 0 || result.issues.some(i => i.rule_id.includes('SYNTAX') || i.rule_id.includes('COMPILER') || i.rule_id.includes('SEMANTICS')))) && (
-                <div className="p-5 rounded-3xl bg-rose-950/80 border-2 border-rose-500 text-rose-200 space-y-3 shadow-xl shadow-rose-950/50">
-                  <div className="flex items-center gap-2.5 text-rose-400 font-black text-sm">
-                    <span className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                      <Terminal size={18} />
+              {(result.status === 'blocked' &&
+                (result.score === 0 ||
+                  result.issues.some(
+                    (i) =>
+                      i.rule_id.includes('SYNTAX') ||
+                      i.rule_id.includes('COMPILER') ||
+                      i.rule_id.includes('SEMANTICS')
+                  ))) && (
+                <div
+                  data-testid="compiler-error-banner"
+                  className="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/70 text-rose-200 space-y-2.5 shadow-lg glow-coral"
+                >
+                  <div className="flex items-center gap-2 text-rose-400 font-black text-xs sm:text-sm">
+                    <span className="p-1.5 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+                      <Terminal size={16} />
                     </span>
-                    <span className="text-base tracking-tight">🚫 Ошибка компиляции / синтаксиса</span>
+                    <span className="tracking-tight">🚫 Ошибка компиляции / синтаксиса</span>
                   </div>
                   <p className="text-xs text-rose-200 leading-relaxed font-medium">
                     Код не прошёл базовую проверку компилятором или содержит грубые ошибки синтаксиса / семантики. Слияние в ветку и открытие PR заблокированы.
                   </p>
-                  <div className="p-3.5 rounded-2xl bg-black/85 font-mono text-xs text-rose-400 border border-rose-500/40 overflow-x-auto whitespace-pre leading-relaxed">
+                  <div className="p-3 rounded-xl bg-black/85 font-mono text-[11px] text-rose-400 border border-rose-500/40 overflow-x-auto whitespace-pre leading-relaxed glass-scrollbar">
                     {result.issues
-                      .filter(i => i.rule_id.includes('SYNTAX') || i.rule_id.includes('COMPILER') || i.rule_id.includes('SEMANTICS') || result.score === 0)
-                      .map(i => `[COMPILER ERROR] Строка #${i.line_number || 1}: ${i.message}`)
+                      .filter(
+                        (i) =>
+                          i.rule_id.includes('SYNTAX') ||
+                          i.rule_id.includes('COMPILER') ||
+                          i.rule_id.includes('SEMANTICS') ||
+                          result.score === 0
+                      )
+                      .map((i) => `[COMPILER ERROR] Строка #${i.line_number || 1}: ${i.message}`)
                       .join('\n') || '[COMPILER ERROR] Синтаксическая ошибка в кодовой базе'}
                   </div>
                 </div>
               )}
 
               {/* Score & Verdict Card */}
-              <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div
+                data-testid="code-review-verdict-card"
+                className="glass-card specular-inset p-4 rounded-2xl border border-white/10 space-y-2.5 shrink-0"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-glass-muted">
                     Оценка надёжности и ZBP
                   </span>
-                  <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${
-                    result.status === 'passed'
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  <span
+                    className={`text-xs font-black px-2.5 py-0.5 rounded-full border specular-inset ${
+                      result.status === 'passed'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                        : result.status === 'blocked'
+                        ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                        : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                    }`}
+                  >
+                    {result.status === 'passed'
+                      ? '✅ Одобрено к PR'
                       : result.status === 'blocked'
-                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                      : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                  }`}>
-                    {result.status === 'passed' ? '✅ Одобрено к PR' : result.status === 'blocked' ? '🚫 Блокеры ZBP' : '⚠️ Требует правок'}
+                      ? '🚫 Блокеры ZBP'
+                      : '⚠️ Требует правок'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className={`text-4xl font-black ${
-                    result.score >= 80 ? 'text-[#04E061]' : result.score >= 50 ? 'text-amber-400' : 'text-rose-400'
-                  }`}>
-                    {result.score}<span className="text-base text-slate-400 font-normal">/100</span>
+                <div className="flex items-center gap-3.5">
+                  <div
+                    className={`text-3xl sm:text-4xl font-black shrink-0 ${
+                      result.score >= 80
+                        ? 'text-brand-green text-glow-green'
+                        : result.score >= 50
+                        ? 'text-amber-400'
+                        : 'text-rose-400 text-glow-coral'
+                    }`}
+                  >
+                    {result.score}
+                    <span className="text-sm text-glass-muted font-normal">/100</span>
                   </div>
-                  <div className="text-xs text-slate-200 leading-snug">
+                  <div className="text-xs text-glass-primary leading-snug">
                     {result.summary}
                   </div>
                 </div>
 
                 {/* Mentor note */}
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-slate-300 space-y-1">
-                  <span className="text-[11px] font-bold text-[#00AAFF] flex items-center gap-1">
+                <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-glass-secondary space-y-1">
+                  <span className="text-[11px] font-bold text-brand-blue flex items-center gap-1">
                     <Sparkles size={12} /> Совет наставника Алексея:
                   </span>
-                  <p>{result.mentor_notes}</p>
+                  <p className="leading-relaxed">{result.mentor_notes}</p>
                 </div>
               </div>
 
               {/* View Switcher Tabs: All Issues vs Full AI Fixed Code */}
-              <div className="flex items-center gap-2 p-1 rounded-2xl bg-black/40 border border-white/10">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/50 border border-white/10 shrink-0">
                 <button
+                  type="button"
+                  data-testid="tab-review-issues"
                   onClick={() => setActiveTab('issues')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  className={`flex-1 min-h-[38px] py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'issues'
-                      ? 'bg-gradient-to-r from-white/15 to-white/10 text-white shadow border border-white/20'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-gradient-to-r from-white/15 to-white/10 text-white shadow border border-white/20 specular-inset'
+                      : 'text-glass-muted hover:text-white'
                   }`}
                 >
-                  <AlertTriangle size={14} className={result.issues.length > 0 ? 'text-rose-400' : 'text-emerald-400'} />
-                  <span>Все замечания ({result.issues.length})</span>
+                  <AlertTriangle
+                    size={14}
+                    className={result.issues.length > 0 ? 'text-rose-400 shrink-0' : 'text-emerald-400 shrink-0'}
+                  />
+                  <span className="truncate">Все замечания ({result.issues.length})</span>
                 </button>
 
                 {result.full_refactored_code && (
                   <button
+                    type="button"
+                    data-testid="tab-review-fixed-code"
                     onClick={() => setActiveTab('fixed_code')}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`flex-1 min-h-[38px] py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       activeTab === 'fixed_code'
-                        ? 'bg-gradient-to-r from-[#04E061]/20 to-[#00AAFF]/20 text-[#04E061] shadow border border-[#04E061]/30 font-black'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-gradient-to-r from-[#04E061]/20 to-[#00AAFF]/20 text-brand-green shadow border border-[#04E061]/40 font-black specular-inset'
+                        : 'text-glass-muted hover:text-white'
                     }`}
                   >
-                    <FileCheck2 size={14} className="text-[#04E061]" />
-                    <span>Исправленный код от AI</span>
+                    <FileCheck2 size={14} className="text-brand-green shrink-0" />
+                    <span className="truncate">Исправленный код от AI</span>
                   </button>
                 )}
               </div>
 
               {/* TAB 1: ALL DETECTED ISSUES SIMULTANEOUSLY */}
               {activeTab === 'issues' && (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {result.issues.length === 0 ? (
-                    <div className="glass-panel p-6 rounded-3xl border border-emerald-500/30 text-center space-y-2">
-                      <ShieldCheck size={36} className="text-[#04E061] mx-auto" />
-                      <h4 className="text-sm font-bold text-white">Критичных замечаний не обнаружено!</h4>
-                      <p className="text-xs text-slate-300">
+                    <div className="glass-card specular-inset p-5 rounded-2xl border border-emerald-500/30 text-center space-y-2">
+                      <ShieldCheck size={32} className="text-brand-green mx-auto" />
+                      <h4 className="text-sm font-bold text-glass-pure">
+                        Критичных замечаний не обнаружено!
+                      </h4>
+                      <p className="text-xs text-glass-secondary">
                         Код написан аккуратно и следует всем правилам Zero Bug Policy. Можно смело открывать Pull Request!
                       </p>
                     </div>
@@ -488,29 +580,42 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                       return (
                         <div
                           key={iss.id}
-                          className={`glass-panel p-5 rounded-3xl border transition-all space-y-3 ${
+                          data-testid={`review-issue-${index}`}
+                          className={`glass-card specular-inset p-4 rounded-2xl border transition-all space-y-2.5 ${
                             isBlocker
-                              ? 'border-rose-500/30 bg-rose-500/5'
-                              : 'border-amber-500/30 bg-amber-500/5'
+                              ? 'border-rose-500/35 bg-rose-500/[0.06]'
+                              : 'border-amber-500/35 bg-amber-500/[0.06]'
                           }`}
                         >
                           {/* Issue Header */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className={`p-1.5 rounded-lg ${isBlocker ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                {isBlocker ? <ShieldAlert size={16} /> : <AlertTriangle size={16} />}
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div className="flex items-start gap-2 min-w-0">
+                              <span
+                                className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                                  isBlocker
+                                    ? 'bg-rose-500/20 text-rose-400'
+                                    : 'bg-amber-500/20 text-amber-400'
+                                }`}
+                              >
+                                {isBlocker ? <ShieldAlert size={15} /> : <AlertTriangle size={15} />}
                               </span>
-                              <div>
-                                <h5 className="font-bold text-white text-xs flex items-center gap-2">
-                                  <span>{index + 1}. {iss.rule_name}</span>
-                                  <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black ${
-                                    isBlocker ? 'bg-rose-500/30 text-rose-300' : 'bg-amber-500/30 text-amber-300'
-                                  }`}>
+                              <div className="min-w-0">
+                                <h5 className="font-bold text-glass-pure text-xs flex flex-wrap items-center gap-1.5">
+                                  <span>
+                                    {index + 1}. {iss.rule_name}
+                                  </span>
+                                  <span
+                                    className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black ${
+                                      isBlocker
+                                        ? 'bg-rose-500/30 text-rose-300'
+                                        : 'bg-amber-500/30 text-amber-300'
+                                    }`}
+                                  >
                                     {isBlocker ? 'Блокер ZBP' : 'Замечание'}
                                   </span>
                                 </h5>
                                 {iss.line_number && (
-                                  <span className="text-[10px] font-mono text-slate-400">
+                                  <span className="text-[10px] font-mono text-glass-muted">
                                     Строка в файле: #{iss.line_number}
                                   </span>
                                 )}
@@ -519,13 +624,14 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
 
                             {iss.suggested_diff && (
                               <button
+                                type="button"
                                 onClick={() => handleCopyDiff(iss.suggested_diff!, iss.id)}
-                                className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer bg-white/5 px-2.5 py-1 rounded-lg border border-white/10"
+                                className="text-[11px] text-glass-secondary hover:text-white flex items-center gap-1 cursor-pointer glass-pill px-2.5 py-1 rounded-lg shrink-0"
                               >
                                 {copiedDiffId === iss.id ? (
                                   <>
-                                    <Check size={12} className="text-[#04E061]" />
-                                    <span className="text-[#04E061] font-bold">Скопировано!</span>
+                                    <Check size={12} className="text-brand-green" />
+                                    <span className="text-brand-green font-bold">Скопировано!</span>
                                   </>
                                 ) : (
                                   <>
@@ -538,14 +644,14 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                           </div>
 
                           {/* Problem Message */}
-                          <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                          <p className="text-xs text-glass-primary leading-relaxed font-medium">
                             {iss.message}
                           </p>
 
                           {/* Avito Scale Impact */}
                           {iss.impact && (
-                            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] text-slate-300 space-y-0.5">
-                              <strong className="text-rose-400 block font-semibold flex items-center gap-1">
+                            <div className="p-2.5 rounded-xl bg-black/45 border border-white/5 text-[11px] text-glass-secondary space-y-0.5">
+                              <strong className="text-rose-400 font-semibold flex items-center gap-1">
                                 💥 Чем грозит на продакшене Авито:
                               </strong>
                               <p className="leading-relaxed">{iss.impact}</p>
@@ -554,7 +660,7 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
 
                           {/* Suggested Diff */}
                           {iss.suggested_diff && (
-                            <div className="p-3 rounded-2xl bg-black/70 border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre">
+                            <div className="p-3 rounded-xl bg-[#060911]/90 border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre glass-scrollbar">
                               {iss.suggested_diff}
                             </div>
                           )}
@@ -562,12 +668,17 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                           {/* Ask AI consultation */}
                           {askFn && (
                             <button
-                              onClick={() => askFn(`Объясни подробнее правило "${iss.rule_name}" в Авито и как правильно его соблюдать.`)}
-                              className="w-full py-1.5 rounded-xl glass-card hover:border-[#00AAFF]/50 text-xs text-[#00AAFF] font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                              type="button"
+                              onClick={() =>
+                                askFn(
+                                  `Объясни подробнее правило "${iss.rule_name}" в Авито и как правильно его соблюдать.`
+                                )
+                              }
+                              className="w-full min-h-[38px] py-1.5 px-3 rounded-xl glass-pill hover:border-[#00AAFF]/50 text-xs text-brand-blue font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                             >
-                              <HelpCircle size={13} />
-                              <span>Спросить у AI-buddy полное объяснение этого правила</span>
-                              <ArrowRight size={13} />
+                              <HelpCircle size={13} className="shrink-0" />
+                              <span className="truncate">Спросить у AI-buddy полное объяснение этого правила</span>
+                              <ArrowRight size={13} className="shrink-0" />
                             </button>
                           )}
                         </div>
@@ -579,41 +690,49 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
 
               {/* TAB 2: COMPLETE REFACTORED CODE */}
               {activeTab === 'fixed_code' && result.full_refactored_code && (
-                <div className="glass-panel p-5 rounded-3xl border border-emerald-500/30 space-y-4">
-                  <div className="flex items-center justify-between">
+                <div className="glass-card specular-inset p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                        <FileCheck2 size={16} className="text-[#04E061]" />
+                      <h4 className="text-xs font-black text-glass-pure flex items-center gap-1.5">
+                        <FileCheck2 size={16} className="text-brand-green shrink-0" />
                         <span>Полный исправленный код (Ready for PR)</span>
                       </h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-glass-muted">
                         Все замечания исправлены в едином модуле согласно регламенту надежности Авито.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
+                        type="button"
+                        data-testid="insert-refactored-code-btn"
                         onClick={() => {
                           if (result.full_refactored_code) {
                             setCode(result.full_refactored_code);
                             setActiveTab('issues');
                             if (onShowToast) {
-                              onShowToast('Отрефакторенный код перенесён в редактор! Нажмите «Запустить AI-Анализ» для повторной проверки.', 'success');
+                              onShowToast(
+                                'Отрефакторенный код перенесён в редактор! Нажмите «Запустить AI-Анализ» для повторной проверки.',
+                                'success'
+                              );
                             }
                           }
                         }}
-                        className="px-3 py-1.5 rounded-xl font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+                        className="min-h-[36px] px-3 py-1.5 rounded-xl font-bold text-xs glass-pill text-white hover:border-[#04E061]/50 flex items-center gap-1.5 cursor-pointer transition-all"
                       >
-                        <Check size={14} className="text-[#04E061]" />
+                        <Check size={14} className="text-brand-green" />
                         <span>Вставить в редактор</span>
                       </button>
 
                       <button
+                        type="button"
+                        data-testid="copy-refactored-code-btn"
                         onClick={() => {
                           handleCopyFullRefactored(result.full_refactored_code!);
-                          if (onShowToast) onShowToast('Полный отрефакторенный код скопирован в буфер обмена', 'info');
+                          if (onShowToast)
+                            onShowToast('Полный отрефакторенный код скопирован в буфер обмена', 'info');
                         }}
-                        className="px-3 py-1.5 rounded-xl font-bold text-xs bg-[#04E061] text-slate-950 hover:brightness-110 flex items-center gap-1.5 cursor-pointer shadow-md"
+                        className="min-h-[36px] px-3 py-1.5 rounded-xl font-bold text-xs bg-[#04E061] text-slate-950 hover:brightness-110 flex items-center gap-1.5 cursor-pointer shadow-md"
                       >
                         {copiedFullCode ? (
                           <>
@@ -630,7 +749,7 @@ export const CodeReviewPlayground: React.FC<CodeReviewPlaygroundProps> = ({
                     </div>
                   </div>
 
-                  <pre className="p-4 rounded-2xl bg-black/70 border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto max-h-[460px] leading-relaxed">
+                  <pre className="p-3.5 rounded-xl bg-[#060911]/90 border border-white/10 font-mono text-[11px] text-slate-200 overflow-x-auto max-h-[320px] leading-relaxed glass-scrollbar">
                     {result.full_refactored_code}
                   </pre>
                 </div>

@@ -245,18 +245,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 sm:px-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 px-3 sm:px-6">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/75 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Palette Modal */}
-      <div className="relative w-full max-w-2xl rounded-3xl glass-panel border border-white/20 shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden z-10 flex flex-col max-h-[75vh] animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-[94vw] max-w-xl mx-auto rounded-3xl glass-modal border border-white/20 shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden z-10 flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-150">
         
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10 bg-slate-900/60">
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-4 border-b border-white/10 bg-slate-900/60">
           <Search size={18} className="text-[#04E061] shrink-0" />
           <input
             ref={inputRef}
@@ -277,13 +277,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <X size={14} />
             </button>
           )}
-          <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono shrink-0">
+          <span className="hidden sm:inline-block px-2 py-0.5 rounded-lg bg-[#04E061]/15 text-[#04E061] border border-[#04E061]/30 shadow-[0_0_10px_rgba(4,224,97,0.2)] font-mono text-[10px] shrink-0">
             ESC
           </span>
         </div>
 
         {/* Results List */}
-        <div ref={listRef} className="overflow-y-auto p-2.5 space-y-1 divide-y divide-white/5 scrollbar-thin scrollbar-thumb-white/10">
+        <div ref={listRef} className="overflow-y-auto glass-scrollbar p-2.5 space-y-1 divide-y divide-white/5">
           {filtered.length === 0 ? (
             <div className="p-8 text-center space-y-2">
               <p className="text-sm font-bold text-slate-300">Ничего не найдено по запросу «{query}»</p>
@@ -296,7 +296,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onAskAI(query);
                   onClose();
                 }}
-                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#04E061]/20 hover:bg-[#04E061]/30 border border-[#04E061]/40 text-[#04E061] text-xs font-bold transition-all cursor-pointer"
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#04E061]/20 hover:bg-[#04E061]/30 border border-[#04E061]/40 text-[#04E061] text-xs font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(4,224,97,0.15)]"
               >
                 <span>Спросить AI-Buddy: «{query}»</span>
                 <CornerDownLeft size={14} />
@@ -313,14 +313,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-gradient-to-r from-white/15 to-white/5 border border-white/20 shadow-md translate-x-0.5'
+                      ? 'bg-gradient-to-r from-white/15 via-white/10 to-white/5 border border-white/20 shadow-md translate-x-0.5'
                       : 'hover:bg-white/5 text-slate-300 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`p-2 rounded-xl shrink-0 ${
                       isSelected
-                        ? 'bg-[#04E061]/20 text-[#04E061] border border-[#04E061]/30'
+                        ? 'bg-[#04E061]/20 text-[#04E061] border border-[#04E061]/30 shadow-[0_0_12px_rgba(4,224,97,0.25)]'
                         : 'bg-white/5 text-slate-400'
                     }`}>
                       <Icon size={16} />
@@ -352,20 +352,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-5 py-2.5 border-t border-white/10 bg-slate-900/40 flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center gap-3">
+        <div className="px-4 sm:px-5 py-2.5 border-t border-white/10 bg-slate-900/60 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="hidden sm:flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[9px]">↑</kbd>
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[9px]">↓</kbd> Навигация
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono text-[9px] border border-white/15 shadow-[0_0_8px_rgba(255,255,255,0.08)]">↑</kbd>
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono text-[9px] border border-white/15 shadow-[0_0_8px_rgba(255,255,255,0.08)]">↓</kbd> Навигация
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[9px]">Enter</kbd> Выбрать
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono text-[9px] border border-white/15 shadow-[0_0_8px_rgba(255,255,255,0.08)]">Enter</kbd> Выбрать
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[9px]">ESC</kbd> Закрыть
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono text-[9px] border border-white/15 shadow-[0_0_8px_rgba(255,255,255,0.08)]">ESC</kbd> Закрыть
             </span>
           </div>
-          <span className="text-[#04E061] font-semibold">
+          <span className="text-[#04E061] font-semibold text-[10px] sm:text-[11px]">
             Spotlight 2.0 • Avito AI-Buddy
           </span>
         </div>

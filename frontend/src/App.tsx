@@ -18,6 +18,7 @@ import { AccessView } from './components/AccessView';
 import { CodeReviewPlayground } from './components/CodeReviewPlayground';
 import { AchievementsView } from './components/AchievementsView';
 import { Footer } from './components/Footer';
+import { MobileNavBar } from './components/MobileNavBar';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastHub, type ToastMessage } from './components/ToastHub';
 import { Clock, CheckSquare, Zap, ShieldAlert, Sparkles, ArrowRight, UserCheck, TrendingUp } from 'lucide-react';
@@ -92,7 +93,13 @@ const getInitialWelcomeMessage = (user: UserProfile): ChatMessage => {
 };
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('chat');
+  const [activeTab, setActiveTabState] = useState<string>('chat');
+  const setActiveTab = (tab: string) => {
+    if (tab === 'tasks') setActiveTabState('checklist');
+    else if (tab === 'reviews') setActiveTabState('code-review');
+    else if (tab === 'leaves') setActiveTabState('absences');
+    else setActiveTabState(tab);
+  };
   const [activeUserId, setActiveUserId] = useState<string>('intern_1');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -349,7 +356,7 @@ export const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-[#080C14] glass-ambient flex items-center justify-center text-white">
         <div className="flex items-center gap-3 glass-panel px-6 py-4 rounded-2xl">
           <div className="w-5 h-5 border-2 border-[#04E061] border-t-transparent rounded-full animate-spin" />
           <span>Загрузка данных Avito AI-Buddy...</span>
@@ -359,12 +366,15 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 relative overflow-hidden flex flex-col justify-between selection:bg-[#04E061]/30">
+    <div className="min-h-screen bg-[#080C14] glass-ambient text-slate-100 relative overflow-hidden flex flex-col justify-between selection:bg-[#04E061]/30">
       
-      {/* Background Glowing Liquid Spheres */}
-      <div className="glow-sphere-1" />
-      <div className="glow-sphere-2" />
-      <div className="glow-sphere-3" />
+      {/* Background Glowing Liquid Spheres Container */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+        <div className="glow-sphere-1" />
+        <div className="glow-sphere-2" />
+        <div className="glow-sphere-3" />
+        <div className="glow-sphere-4" />
+      </div>
 
       {/* Top Header with Tabs & User Switcher */}
       <Header
@@ -378,38 +388,38 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full z-10 space-y-6 flex-1">
+      <main className="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-20 xl:pb-6 w-full z-10 space-y-3 sm:space-y-4 flex-1 flex flex-col">
         
-        {/* User Role Quick Switch Bar with ALL 3 Personas */}
-        <div className="glass-panel px-4 py-3 rounded-2xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#04E061] shadow-[0_0_8px_#04E061]"></span>
+        {/* User Role Quick Switch Bar with ALL 3 Personas (Slim ~38px height) */}
+        <div className="glass-panel px-3.5 py-1.5 rounded-xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#04E061] shadow-[0_0_8px_#04E061]"></span>
             <span className="text-slate-300">
-              Текущий пользователь: <strong className="text-white text-sm">{currentUser.name}</strong>{' '}
+              Текущий пользователь: <strong className="text-white text-xs">{currentUser.name}</strong>{' '}
               <span className="text-slate-400">
                 ({currentUser.role === 'intern' ? '🎓 Стажёр Backend' : currentUser.role === 'mentor' ? '👨‍💻 Наставник (Buddy)' : '👩‍💼 Тимлид команды'})
               </span>
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-slate-400 font-medium mr-1">Быстрый вход:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-slate-400 font-medium mr-1 text-[11px]">Быстрый вход:</span>
             {users.map((u) => {
               const isActive = u.user_id === currentUser.user_id;
               return (
                 <button
                   key={u.user_id}
                   onClick={() => handleSwitchUser(u.user_id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all cursor-pointer border ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer border text-[11px] ${
                     isActive
-                      ? 'bg-white/20 text-white font-bold border-white/40 shadow-lg ring-1 ring-[#04E061]'
+                      ? 'bg-white/20 text-white font-bold border-white/40 shadow-sm ring-1 ring-[#04E061]'
                       : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <img
                     src={u.avatar_url || (u.role === 'intern' ? '/avatars/arseniy.svg' : u.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg')}
                     alt={u.name}
-                    className="w-5 h-5 rounded-full object-cover bg-slate-800 ring-1 ring-white/10"
+                    className="w-4 h-4 rounded-full object-cover bg-slate-800 ring-1 ring-white/10"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = u.role === 'intern' ? '/avatars/arseniy.svg' : u.role === 'mentor' ? '/avatars/alexey.svg' : '/avatars/ekaterina.svg';
                     }}
@@ -781,6 +791,9 @@ export const App: React.FC = () => {
         )}
 
       </main>
+
+      {/* Docked Mobile Bottom Glass Navigation Bar (<768px) */}
+      <MobileNavBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Glassy Liquid Footer */}
       <Footer />

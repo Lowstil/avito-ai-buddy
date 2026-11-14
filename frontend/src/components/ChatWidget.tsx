@@ -59,7 +59,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col h-[650px] relative">
+    <div className="glass-panel rounded-3xl p-4 sm:p-6 border border-white/10 shadow-2xl flex flex-col h-[calc(100dvh-130px)] md:h-[calc(100vh-230px)] min-h-[480px] max-h-[720px] relative">
       
       {/* Human-friendly Header */}
       <div className="flex items-center justify-between pb-4 border-b border-white/10">
@@ -98,7 +98,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       {/* Messages Scroll Area (CONTAINED: No window scrolling!) */}
       <div 
         ref={chatScrollRef}
-        className="flex-1 overflow-y-auto py-4 space-y-4 pr-2"
+        className="flex-1 overflow-y-auto glass-scrollbar py-4 space-y-4 pr-2"
         style={{ scrollBehavior: 'smooth' }}
       >
         <AnimatePresence>
@@ -119,8 +119,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               <div
                 className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed relative group ${
                   msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-[#00AAFF] to-[#0088dd] text-white shadow-lg font-medium'
-                    : 'glass-card border-white/10 text-slate-200 shadow-md'
+                    ? 'bg-gradient-to-br from-[#00AAFF]/25 via-[#00AAFF]/15 to-[#04E061]/15 border border-[#00AAFF]/40 text-white shadow-[0_8px_25px_rgba(0,170,255,0.2)] backdrop-blur-md font-medium'
+                    : 'glass-card border-white/10 text-slate-200 shadow-md backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                 }`}
               >
                 {/* Copy button for assistant responses */}
@@ -206,25 +206,32 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         {/* Loading Indicator */}
         {isLoading && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center gap-2 text-xs text-slate-400 pl-11"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 pl-11"
           >
-            <Loader2 size={16} className="animate-spin text-[#04E061]" />
-            <span>AI-buddy готовит понятный ответ...</span>
+            <div className="glass-card px-3.5 py-2 rounded-2xl w-fit flex items-center gap-2.5 border border-[#04E061]/30 shadow-[0_0_15px_rgba(4,224,97,0.15)] text-xs text-slate-300">
+              <Loader2 size={15} className="animate-spin text-[#04E061]" />
+              <span className="font-medium">AI-buddy готовит понятный ответ...</span>
+              <span className="flex items-center gap-1 ml-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#04E061] animate-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00AAFF] animate-pulse [animation-delay:150ms]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#965EEB] animate-pulse [animation-delay:300ms]"></span>
+              </span>
+            </div>
           </motion.div>
         )}
       </div>
 
       {/* Suggested Quick Question Chips */}
       {messages.length > 0 && messages[messages.length - 1].suggested_chips && (
-        <div className="pt-2 pb-3 flex flex-wrap gap-1.5">
+        <div className="pt-2 pb-3 flex flex-wrap gap-1.5 overflow-x-auto no-scrollbar">
           {messages[messages.length - 1].suggested_chips?.map((chip, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => handleChipClick(chip)}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-xl glass-pill text-slate-300 hover:text-white hover:border-[#04E061]/40 transition-colors cursor-pointer"
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-xl glass-pill border-[#04E061]/30 hover:border-[#04E061]/60 hover:shadow-[0_0_12px_rgba(4,224,97,0.3)] text-slate-300 hover:text-white transition-all cursor-pointer shrink-0"
             >
               {chip}
             </button>
@@ -234,7 +241,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Chat Input Bar */}
       <form onSubmit={handleSubmit} className="pt-2">
-        <div className="glass-card rounded-2xl p-1.5 flex items-center gap-2 border border-white/15 focus-within:border-[#04E061]/60 transition-colors">
+        <div className="glass-card rounded-2xl p-1.5 flex items-center gap-2 border border-white/15 focus-within:border-[#04E061]/60 focus-within:shadow-[0_0_20px_rgba(4,224,97,0.2)] transition-all">
           <input
             type="text"
             value={input}
@@ -245,7 +252,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="w-9 h-9 rounded-xl bg-[#04E061] text-slate-950 flex items-center justify-center font-bold hover:bg-[#03c754] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-xl bg-[#04E061] text-slate-950 flex items-center justify-center font-bold hover:bg-[#03c754] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-[0_0_12px_rgba(4,224,97,0.3)] hover:shadow-[0_0_18px_rgba(4,224,97,0.5)]"
           >
             <Send size={15} />
           </button>

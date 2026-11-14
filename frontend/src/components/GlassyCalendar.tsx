@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle2, Clock, Ban } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Clock, Ban, Calendar as CalendarIcon } from 'lucide-react';
 import type { AbsenceRequest } from '../types';
 
 interface GlassyCalendarProps {
@@ -26,7 +26,7 @@ export const formatRussianDate = (dateStr: string): string => {
   const year = parseInt(parts[0], 10);
   const month = parseInt(parts[1], 10) - 1;
   const day = parseInt(parts[2], 10);
-  
+
   const d = new Date(year, month, day);
   const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
   const monthGenitive = [
@@ -93,30 +93,40 @@ export const GlassyCalendar: React.FC<GlassyCalendarProps> = ({
   const activeDateToHighlight = highlightDate || selectedDate;
 
   return (
-    <div className={`glass-card rounded-2xl border border-white/10 ${size === 'sm' ? 'p-3 text-xs' : 'p-4 text-xs'}`}>
-      
+    <div
+      data-testid="glassy-calendar"
+      className={`glass-card glass-specular specular-inset rounded-2xl border border-white/15 relative overflow-hidden w-full max-w-full ${
+        size === 'sm' ? 'p-3 text-xs' : 'p-3.5 sm:p-4 text-xs'
+      }`}
+    >
+      {/* Top edge specular laser reflection */}
+      <div className="laser-line-green absolute top-0 inset-x-0 opacity-60 pointer-events-none" />
+
       {/* Calendar Header with Month & Controls */}
-      <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-white/10">
-        <span className="font-extrabold text-white text-xs sm:text-sm flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#04E061] animate-pulse"></span>
-          {MONTHS_RU[currentMonth]} {currentYear}
+      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/10">
+        <span className="font-extrabold text-glass-pure text-xs sm:text-sm flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#04E061] glow-green animate-pulse shrink-0"></span>
+          <CalendarIcon size={14} className="text-[#04E061] hidden sm:inline shrink-0" />
+          <span>{MONTHS_RU[currentMonth]} {currentYear}</span>
         </span>
 
         {interactive && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={prevMonth}
-              className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              aria-label="Предыдущий месяц"
               title="Предыдущий месяц"
+              className="min-w-[36px] min-h-[36px] sm:min-w-[32px] sm:min-h-[32px] p-1.5 rounded-xl glass-pill text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               onClick={nextMonth}
-              className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              aria-label="Следующий месяц"
               title="Следующий месяц"
+              className="min-w-[36px] min-h-[36px] sm:min-w-[32px] sm:min-h-[32px] p-1.5 rounded-xl glass-pill text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
             >
               <ChevronRight size={16} />
             </button>
@@ -125,55 +135,67 @@ export const GlassyCalendar: React.FC<GlassyCalendarProps> = ({
       </div>
 
       {/* Weekdays Header */}
-      <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-slate-400 mb-1.5">
+      <div className="grid grid-cols-7 gap-1 text-center font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider mb-1.5">
         {WEEKDAYS_RU.map((w, idx) => (
-          <div key={idx} className={idx >= 5 ? 'text-rose-400/80' : 'text-slate-400'}>
+          <div
+            key={idx}
+            className={idx >= 5 ? 'text-[#ff6b6b] font-black' : 'text-glass-secondary'}
+          >
             {w}
           </div>
         ))}
       </div>
 
       {/* Days Grid */}
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center">
         {/* Leading empty spaces */}
         {Array.from({ length: startingOffset }).map((_, idx) => (
-          <div key={`empty-${idx}`} className="h-7 sm:h-8" />
+          <div key={`empty-${idx}`} className="h-9 sm:h-8" />
         ))}
 
         {/* Days of month */}
         {days.map(({ day, dateStr, isWeekend }) => {
           const isSelected = dateStr === activeDateToHighlight;
-          
+
           // Check if this date has an existing absence in list
           const existing = existingAbsences.find(a => a.start_date === dateStr);
-          
-          let cellStyle = 'hover:bg-white/10 text-slate-200';
+
+          let cellStyle =
+            'bg-white/[0.03] hover:bg-white/[0.12] border border-white/[0.07] hover:border-white/25 text-glass-primary specular-inset';
           if (isWeekend) {
-            cellStyle = 'text-slate-500';
+            cellStyle =
+              'bg-white/[0.015] hover:bg-white/[0.08] border border-white/[0.04] text-glass-muted';
           }
 
           if (isSelected) {
             if (highlightDate) {
               // Highlighted for review (Mentor/Lead or Card)
               if (highlightStatus === 'approved') {
-                cellStyle = 'bg-emerald-500 text-slate-950 font-black shadow-[0_0_12px_#04E061] ring-2 ring-emerald-300';
+                cellStyle =
+                  'bg-[#04E061] text-slate-950 font-black glow-green-lg border border-emerald-200 ring-2 ring-[#04E061]/60 scale-[1.03] z-10';
               } else if (highlightStatus === 'rejected') {
-                cellStyle = 'bg-rose-500 text-white font-black shadow-[0_0_12px_#ef4444] ring-2 ring-rose-300';
+                cellStyle =
+                  'bg-[#FF5252] text-white font-black glow-coral-lg border border-rose-200 ring-2 ring-[#FF5252]/60 scale-[1.03] z-10';
               } else {
                 // Pending approval
-                cellStyle = 'bg-amber-400 text-slate-950 font-black shadow-[0_0_14px_#f59e0b] ring-2 ring-amber-300 animate-pulse';
+                cellStyle =
+                  'bg-amber-400 text-slate-950 font-black shadow-[0_0_18px_rgba(245,158,11,0.55)] border border-amber-200 ring-2 ring-amber-300/70 animate-pulse scale-[1.03] z-10';
               }
             } else {
               // Selected by Intern
-              cellStyle = 'bg-[#04E061] text-slate-950 font-black shadow-[0_0_12px_#04E061] ring-2 ring-emerald-300';
+              cellStyle =
+                'bg-[#04E061] text-slate-950 font-black glow-green-lg border border-emerald-200 ring-2 ring-[#04E061]/60 scale-[1.03] z-10';
             }
           } else if (existing) {
             if (existing.status === 'approved') {
-              cellStyle = 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 font-bold';
+              cellStyle =
+                'bg-emerald-950/70 text-[#04E061] border-neon-green font-extrabold';
             } else if (existing.status === 'rejected') {
-              cellStyle = 'bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold';
+              cellStyle =
+                'bg-rose-950/70 text-[#ff6b6b] border-neon-coral font-extrabold';
             } else {
-              cellStyle = 'bg-amber-950/60 text-amber-300 border border-amber-500/40 font-bold';
+              cellStyle =
+                'bg-amber-950/70 text-amber-300 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] font-extrabold';
             }
           }
 
@@ -183,46 +205,68 @@ export const GlassyCalendar: React.FC<GlassyCalendarProps> = ({
               type="button"
               disabled={!interactive}
               onClick={() => interactive && onSelectDate && onSelectDate(dateStr)}
-              className={`h-7 sm:h-8 rounded-xl flex flex-col items-center justify-center transition-all relative ${
-                interactive ? 'cursor-pointer' : 'cursor-default'
+              aria-label={`Выбрать дату ${dateStr}`}
+              className={`calendar-day-btn h-9 sm:h-8 rounded-xl flex flex-col items-center justify-center transition-all relative select-none ${
+                interactive ? 'cursor-pointer active:scale-95' : 'cursor-default'
               } ${cellStyle}`}
             >
-              <span className="text-xs">{day}</span>
-              
+              <span className="text-xs leading-none">{day}</span>
+
               {/* Status indicators */}
               {existing && !isSelected && (
-                <span className={`w-1 h-1 rounded-full absolute bottom-1 ${
-                  existing.status === 'approved' ? 'bg-[#04E061]' :
-                  existing.status === 'rejected' ? 'bg-rose-500' : 'bg-amber-400'
-                }`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
+                    existing.status === 'approved'
+                      ? 'bg-[#04E061] shadow-[0_0_6px_#04E061]'
+                      : existing.status === 'rejected'
+                      ? 'bg-[#FF5252] shadow-[0_0_6px_#FF5252]'
+                      : 'bg-amber-400 shadow-[0_0_6px_#f59e0b]'
+                  }`}
+                />
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Legend / Status Helper */}
-      {highlightDate && (
-        <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px]">
-          <span className="text-slate-400">Статус даты:</span>
-          {highlightStatus === 'approved' && (
-            <span className="text-emerald-300 font-bold flex items-center gap-1">
-              <CheckCircle2 size={12} className="text-[#04E061]" /> Одобренный день
-            </span>
-          )}
-          {highlightStatus === 'pending_approval' && (
-            <span className="text-amber-300 font-bold flex items-center gap-1 animate-pulse">
-              <Clock size={12} className="text-amber-400" /> На согласовании
-            </span>
-          )}
-          {highlightStatus === 'rejected' && (
-            <span className="text-rose-300 font-bold flex items-center gap-1">
-              <Ban size={12} className="text-rose-400" /> Отклонённый день
-            </span>
-          )}
-        </div>
-      )}
-
+      {/* Compact Legend / Status Helper */}
+      <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-[11px]">
+        {highlightDate ? (
+          <>
+            <span className="text-glass-muted font-medium">Статус даты:</span>
+            {highlightStatus === 'approved' && (
+              <span className="text-[#04E061] font-bold flex items-center gap-1">
+                <CheckCircle2 size={12} className="text-[#04E061]" /> Одобренный день
+              </span>
+            )}
+            {highlightStatus === 'pending_approval' && (
+              <span className="text-amber-300 font-bold flex items-center gap-1 animate-pulse">
+                <Clock size={12} className="text-amber-400" /> На согласовании
+              </span>
+            )}
+            {highlightStatus === 'rejected' && (
+              <span className="text-[#ff6b6b] font-bold flex items-center gap-1">
+                <Ban size={12} className="text-[#FF5252]" /> Отклонённый день
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#04E061] shadow-[0_0_6px_#04E061]"></span>
+              <span className="text-glass-secondary font-semibold">Выбрано / Одобрено</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]"></span>
+              <span className="text-glass-secondary font-semibold">Ожидает</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#FF5252] shadow-[0_0_6px_#FF5252]"></span>
+              <span className="text-glass-secondary font-semibold">Отклонено</span>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
